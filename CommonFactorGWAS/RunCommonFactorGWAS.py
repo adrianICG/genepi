@@ -335,8 +335,8 @@ else:
 ######################################################################
 #                 Step three common factor GWAS                      #
 ######################################################################
-if args.skipstep1:
-	print("Skipping step 1 as requested by user")
+if args.skipstep3:
+	print("Skipping step 3 as requested by user")
 else:
 	print("Generating script three")
 	script3="require(GenomicSEM);require(hms);require(data.table);setwd('%s');"%(normalwd)
