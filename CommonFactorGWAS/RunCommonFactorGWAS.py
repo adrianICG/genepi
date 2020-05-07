@@ -224,7 +224,7 @@ else:
 	script1+=",".join(["%f"%(i) for i in inputDataFrame.loc[:,'sampprev']])
 	script1+=");"
 	script1+="population.prev<-c("
-	script1+=",".join(["%f"%(i) for i in inputDataFrame.loc[:,'popprev']])
+	script1+=",".join(["%s"%(i) for i in inputDataFrame.loc[:,'popprev']])
 	script1+=");"
 	script1+="ld <- '/working/lab_nickm/adrianC/CommonData/eur_w_ld_chr/';"
 	script1+="wld <- '/working/lab_nickm/adrianC/CommonData/eur_w_ld_chr/';"
