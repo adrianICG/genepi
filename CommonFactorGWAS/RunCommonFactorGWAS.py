@@ -280,7 +280,7 @@ else:
 	script2+=",".join(linprob)
 	script2+=");"
 	script2+="prop<-c("
-	script2+=",".join(["%f"%(i) for i in prop])
+	script2+=",".join(["%s"%(i) for i in prop])
 	script2+=");"
 	script2+="maf.filter<-%s;"%(args.minMAF)
 	script2+="info.filter<-%s;"%(args.minRsq)
