@@ -210,6 +210,7 @@ if AnyError:
 
 if args.skipstep1:
 	print("Skipping step 1 as requested by user")
+	Step1ID={}
 else:
 	print("Generating script one")
 	script1="require(GenomicSEM);setwd('%s');files<-c("%(normalwd)
