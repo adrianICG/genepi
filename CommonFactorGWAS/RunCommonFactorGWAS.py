@@ -354,7 +354,7 @@ else:
 		currscript=open(scriptname, 'w')
 		currscript.write("%s\n"%(JobScriptHeader))
 		currscript.write("#PBS -N CFGWAS_3\n")
-		currscript.write("#PBS -l ncpus=%s,mem=32GB,walltime=10:00:00\n"%(args.cores))
+		currscript.write("#PBS -l ncpus=%s,mem=120GB,walltime=10:00:00\n"%(args.cores))
 		currscript.write("cd $PBS_O_WORKDIR\n")
 		currscript.write("module load R/3.5.1\n")
 		currscript.write("Rscript -e \"%s\"\n"%(script3))
