@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-#
-# QIMR Genetic Epidemiology standard PRS calculation pipeline.
-#
+
 # Written by Adrian Campos, QIMR Genetic Epidemiology. ("AC")
 
 
