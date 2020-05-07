@@ -187,7 +187,10 @@ for row in inputDataFrame.index:
 			print("%s is a binary phenotype, but analyzed with a linear model, thus standard errors cannot be in the logistic scale. GenomicSEM will transform this betas to the logistic scale based on the sample prevalence\n"%(inputDataFrame.loc[row,'file']))
 		else:
 			linprob.append('F')
-			selogit.append(inputDataFrame.loc[row,'selogit'])
+			if inputDataFrame.loc[row,'selogit']:
+				selogit.append('T')
+			else:
+				selogit.append('F')
 			prop.append('NA')
 			print("%s is a binary phenotype, analyzed with a logistic model. Your input for selogit (%s) will be used to determine whether standard errors are in the logistic scale\n"%(inputDataFrame.loc[row,'file'],inputDataFrame.loc[row,'selogit']))
 
