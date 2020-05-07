@@ -221,10 +221,10 @@ else:
 	script1+="munge(files = files,hm3 = '/working/lab_nickm/adrianC/CommonData/w_hm3.noMHC.snplist',trait.names = trait.names, info.filter = 0.9, maf.filter = 0.01);"
 	script1+="traits<-paste(trait.names,'.sumstats.gz',sep='');"
 	script1+="sample.prev<-c("
-	script1+=",".join(["%f"%(i) for i in inputDataFrame.loc[:,'sampprev']])
+	script1+=",".join(["NA" if np.isnan(i) else "%f"%(i) for i in inputDataFrame.loc[:,'sampprev']])
 	script1+=");"
 	script1+="population.prev<-c("
-	script1+=",".join(["%s"%(i) for i in inputDataFrame.loc[:,'popprev']])
+	script1+=",".join(["NA" if np.isnan(i) else "%f"%(i) for i in inputDataFrame.loc[:,'popprev']])
 	script1+=");"
 	script1+="ld <- '/working/lab_nickm/adrianC/CommonData/eur_w_ld_chr/';"
 	script1+="wld <- '/working/lab_nickm/adrianC/CommonData/eur_w_ld_chr/';"
