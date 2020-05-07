@@ -20,7 +20,7 @@ class z():
 		self.skipstep1=False
 		self.skipstep2=False
 		self.skipstep3=False
-		self.cores=1
+		self.cores=12
 		self.estimation='DWLS'
 args=z()
 '''		
@@ -341,7 +341,7 @@ else:
 	script3+="print('Starting the CommonFactorGWAS!');"
 	script3+="results<-commonfactorGWAS(SNPs=Model_D_SS,covstruc=LDSCoutput_stage2,cores=%s,estimation='%s');"%(args.cores,args.estimation)
 	script3+="print('Finished the CommonFactorGWAS!');"
-	script3+="write.table(results, file =%s/%s_CFGWAS.dat, row.names = FALSE, col.names = TRUE, quote = FALSE, sep = '\\t';"%(normalwd,args.jobname)
+	script3+="write.table(results, file =%s/%s_CFGWAS.dat, row.names = FALSE, col.names = TRUE, quote = FALSE, sep = '\\t');"%(normalwd,args.jobname)
 
 	print("R script three looked like this (in a one liner):\n\n%s\n\nPlease check that it looks alright"%(re.sub(";","\n",script3)))
 
