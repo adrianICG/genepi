@@ -51,11 +51,9 @@ try:
 except ImportError as error:
 	print('Python module ('+error.name+') does not seem to be loaded')
 	exit()
-	
-	
+
 ######################################################################
 #                        Pree needed functions                       #
-######################################################################
 ######################################################################
 
 def eprint(*args, **kwargs):
