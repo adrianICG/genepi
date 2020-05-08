@@ -20,7 +20,7 @@ while(running):
 	qstatSTR=''.join([i.decode("utf-8") for i in submitFinished.communicate()])
 	reresult=re.search('qstat: (\d+(|\[\]))\.hpc.* Job has finished',qstatSTR)
 	if reresult is None:
-		submits=subprocess.Popen("qstat -f %s | grep 'resources_used.mem\|Resource_List.mem = 120gb'"%(jobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		submits=subprocess.Popen("qstat -f %s | grep 'resources_used.mem\|Resource_List.mem'"%(jobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		out=''.join([i.decode("utf-8") for i in submits.communicate()])
 		usedline,requestedline=[i for i in re.split(pattern='\n',string=out) if not i=='']
 		usedmem=int(re.search('(\d+)',usedline).group(1))/1e+6
