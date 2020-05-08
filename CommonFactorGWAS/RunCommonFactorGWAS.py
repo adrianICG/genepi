@@ -487,7 +487,9 @@ else:
 			else:
 				if len(toRun):
 					print("Some subjobs did not finish in time. Try adding the -retry flag to try running them several times.")
-				
+			print ("All common factor GWAS subjobs finished running. Merging results")
+			finalDF=pd.concat((pd.read_csv(f,header=0,sep='\t') for f in ExpectedFiles))
+			finalDF.to_csv("%s/%s_CFGWAS.dat"%(normalwd,args.jobname),sep="\t",index=False)
 ###################################### If not slipt jobs (has never finished; good luck try 24 hrs)  ############################################################
 	else:
 		print("Generating script three")
