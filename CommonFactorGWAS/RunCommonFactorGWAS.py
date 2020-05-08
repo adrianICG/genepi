@@ -20,8 +20,10 @@ class z():
 		self.skipstep1=False
 		self.skipstep2=False
 		self.skipstep3=False
-		self.cores=12
+		self.cores=1
 		self.estimation='DWLS'
+		self.splitJobs=True
+		self.retry=True
 args=z()
 '''		
 
@@ -45,7 +47,6 @@ try:
 	import socket
 	import numpy as np
 	import warnings
-	import string
 	from os import path
 except ImportError as error:
 	print('Python module ('+error.name+') does not seem to be loaded')
@@ -59,6 +60,23 @@ except ImportError as error:
 
 def eprint(*args, **kwargs):
 	print(*args, file=sys.stderr, **kwargs)
+
+def SubmitJobArray(scriptName,valuesFile,logdir=None):
+	Submit=subprocess.Popen("qsub -J $(echo \"1-$(wc -l %s|cut -f1 -d ' ')\") -o %s -e %s %s"%(valuesFile,logdir,logdir,scriptName),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	outraw=Submit.communicate()
+	outlines=outraw[0].decode("utf-8") + outraw[1].decode("utf-8")
+	if outlines.find('qsub') >=0:
+		eprint('qsub returned this message :\n%s\n'%(outlines))
+		AnyErrors=True
+	elif outlines=='':
+		eprint('qsub returned nothing.\n')
+		AnyErrors=True
+	else :
+		finishedJobs={}
+		jobID=outlines.rstrip()
+		eprint('.. job name is %s'%(jobID))
+		finishedJobs[jobID]=0
+		return(finishedJobs)
 
 def SubmitScript(scriptName):
     ''' Submits all files with an extension in the current working directory'''
@@ -93,7 +111,7 @@ def CheckCompletion(jobDic,timew=60):
 		# Get ids of finished jobs. Count. Mark as complete.
 		ncomplete=0
 		for i in OutLines:
-			reresult=re.search('qstat: (\d+(|\[\]))\.hpc.* Job has finished',i)
+			reresult=re.search('qstat: (\d+(|\[\])\.hpc.*) Job has finished',i)
 			if reresult != None:
 				id=reresult.group(1)
 				if jobDic[id] != 1:
@@ -116,6 +134,18 @@ def CheckErrors(ext='*.e*'):
 	Submits=subprocess.Popen("grep 'Error' %s"%(ext),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	outlines=Submits.communicate()[0].decode("utf-8")
 	Errors=[i for i in re.split(pattern='\n',string=outlines) if not i=='']
+	return(Errors)
+	
+def CheckErrorsArray(logdir):
+	import subprocess
+	import re
+	AnyErrors=False
+	logs=glob.glob('%s/*.ER'%(logdir))
+	Errors=[]
+	for i in logs:
+		Submits=subprocess.Popen("grep 'Error' %s"%(i),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		errlines=Submits.communicate()[0].decode("utf-8")
+		Errors=[i for i in re.split(pattern='\n',string=errlines) if not i=='']
 	return(Errors)
 
 ######################################################################
@@ -147,9 +177,12 @@ parser.add_argument('-nosub',action='store_true',help="Do not submit any jobs (o
 parser.add_argument('-skipstep1',action='store_true',help="Do not create nor submit step1 script (use this flag if it ran correctly)")
 parser.add_argument('-skipstep2',action='store_true',help="Do not create nor submit step2 script (use this flag if it ran correctly)")
 parser.add_argument('-skipstep3',action='store_true',help="Do not create nor submit step3 script (Not sure why you would want this)")
+parser.add_argument('-splitJobs',action='store_true',help="Split the common factor GWAS into chunks of 100k SNPs this is faster but less stable")
+parser.add_argument('-retry',action='store_true',help="When the common factor GWAS jobs are split, subjobs very often fail without reason, but finish when ran again. This flag will reattempt to run non-finishing jobs up to 10 times which should be more than enough to get them to finish")
 
 
-parser._actions[0].help="Print this help message and exit. For information on the required columns for the input file please go to: https://github.com/MichelNivard/GenomicSEM/wiki/4.-Common-Factor-GWAS"
+
+parser._actions[0].help="Print this help message and exit. HIGHLY RECOMMENDED TO INCLUDE: -splitJobs and -retry flags to speed up computation. For information on the required columns for the input file please go to: https://github.com/MichelNivard/GenomicSEM/wiki/4.-Common-Factor-GWAS"
 args = parser.parse_args()
 ######################################################################
 #                        Initial checks                              #
@@ -335,55 +368,173 @@ else:
 ######################################################################
 #                 Step three common factor GWAS                      #
 ######################################################################
+
 if args.skipstep3:
 	print("Skipping step 3 as requested by user")
 else:
-	print("Generating script three")
-	script3="require(GenomicSEM);require(hms);require(data.table);setwd('%s');"%(normalwd)
-	script3+="Model_D_SS <- fread('%s/%s_combinedsumstats.tsv',header=TRUE);"%(normalwd,args.jobname)
-	script3+="load('LDSCoutput_stage2.RData');"
-	script3+="print('Starting the CommonFactorGWAS!');"
-	script3+="results<-commonfactorGWAS(SNPs=Model_D_SS,covstruc=LDSCoutput_stage2,cores=%s,estimation='%s');"%(args.cores,args.estimation)
-	script3+="print('Finished the CommonFactorGWAS!');"
-	script3+="write.table(results, file =%s/%s_CFGWAS.dat, row.names = FALSE, col.names = TRUE, quote = FALSE, sep = '\\t');"%(normalwd,args.jobname)
-
-	print("R script three looked like this (in a one liner):\n\n%s\n\nPlease check that it looks alright"%(re.sub(";","\n",script3)))
-
-
-	JobScriptHeader=r'#!/bin/bash'
-	scriptname="3_GSEM_CommonFactorGWAS.PBS" 
-	#jobarray script for submission
-	eprint("Creating Step 3 job script (%s).\n"%(scriptname))
-	try:
-		currscript=open(scriptname, 'w')
-		currscript.write("%s\n"%(JobScriptHeader))
-		currscript.write("#PBS -N CFGWAS_3\n")
-		currscript.write("#PBS -l ncpus=%s,mem=120GB,walltime=10:00:00\n"%(args.cores))
-		currscript.write("cd $PBS_O_WORKDIR\n")
-		currscript.write("module load R/3.5.1\n")
-		currscript.write("Rscript -e \"%s\"\n"%(script3))
-	except IOError:
-		eprint("Error : could not write file %s !\n"%(scriptname))
-	finally:
-		currscript.close()
-
-	if args.nosub:
-		print("Finished writing step 3. Flag 'nosub' detected, will not submit to the cluster")
-	else:
-		print("Finished writing step 3. Will now submit it to the cluster")
-		finishedJobs={}
-		print("Submitted step 3 at %s"%(datetime.datetime.now()))
-		finishedJobs=SubmitScript(scriptname) # hash table with completion info
-		CheckCompletion(finishedJobs)
-		# Checking for errors using simple grep
-		anyErrors=CheckErrors()
-		if len(anyErrors):
-			print("The following errors were reported:\n")
-			for currError in anyErrors:
-				print(currError)
-				print(currError)
-				exit()
+	if args.splitJobs:
+		print("Will split the common factor GWAS jobs into subjobs. This has shown great speed but some jobs never finish and need to be ran again")
+		print("Creating out directory and logfiles directory")
+		print("Creating values file based on combined sumstats number of lines")
+		###################################### Values file for JOB Array ####################################################
+		submitWC=subprocess.Popen("wc -l %s/%s_combinedsumstats.tsv"%(normalwd,args.jobname),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		wcSTR=''.join([i.decode("utf-8") for i in submitWC.communicate()])
+		reresult=int(re.search('(\d+)',wcSTR).group(1))-1
+		start=[]
+		stop=[]
+		for i in range(1,reresult,10000):
+			start.append(i)
+			stop.append(i+9999)
+		stop[len(stop)-1]=reresult
+		input=["%s/%s_combinedsumstats.tsv"%(normalwd,args.jobname) for i in range(len(start))]
+		output=["%s/CommonFactorGWASout/%s_%s_%s.dat"%(normalwd,args.jobname,start[i],stop[i]) for i in range(len(start))]
+		values=pd.DataFrame({"input":input,"start":start,"stop":stop,"output":output})
+		values.to_csv("values",sep=' ',index=False,header=False)
+		subprocess.call(['mkdir','-p','CommonFactorGWASout','logfiles'])
+		
+		###################################### Base script (R) for JOB Array ####################################################
+		print("Generating script three (Rbase script)")
+		script3="args = commandArgs(trailingOnly=TRUE)\ninput1 <- args[1]\nn_start <- args[2]\nn_stop <- args[3]\noutput <- args[4]\n"
+		script3+="require(GenomicSEM)\nrequire(hms)\nrequire(data.table)\nsetwd('%s')\n"%(normalwd)
+		script3+="Model_D_SS <- fread('%s/%s_combinedsumstats.tsv',header=TRUE)\n"%(normalwd,args.jobname)
+		script3+="load('LDSCoutput_stage2.RData')\n"
+		script3+="Model_D_SS_trunc<-Model_D_SS[paste0(n_start):paste0(n_stop),]\n"
+		script3+="Model_D_input<-addSNPs(LDSCoutput_stage2, Model_D_SS_trunc, parallel = FALSE)\n"
+		script3+="print('Starting the CommonFactorGWAS!')\n"
+		script3+="results<-commonfactorGWAS(SNPs=NULL,covstruc=NULL,cores=1,Output=Model_D_input,estimation='%s')\n"%(args.estimation)
+		script3+="print('Finished the CommonFactorGWAS!')\n"
+		script3+="write.table(results, file =paste0(output), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = '\\t')\n"
+		print("R script three looked like this:\n\n%s\n\nPlease check that it looks alright"%(script3))
+		with open("3_GSEM_CommonFactorGWAS.R",'w') as currscript:
+			currscript.write(script3)
+			
+		###################################### Submission script file for JOB Array ####################################################
+		JobScriptHeader=r'#!/bin/bash'
+		scriptname="GSEM_CommonFactor_Array.PBS" 
+		#jobarray script for submission
+		eprint("Creating Step 3 job script (%s).\n"%(scriptname))
+		try:
+			currscript=open(scriptname, 'w')
+			currscript.write("%s\n"%(JobScriptHeader))
+			currscript.write("#PBS -N CFGWAS_3\n")
+			currscript.write("#PBS -l ncpus=1,mem=12GB,walltime=2:00:00\n")
+			currscript.write("cd $PBS_O_WORKDIR\n")
+			currscript.write("module load R/3.5.1\n")
+			currscript.write("VARIABLES=($(awk -v var=$PBS_ARRAY_INDEX 'NR==var' values))\n")
+			currscript.write("input=${VARIABLES[0]}\n")
+			currscript.write("currStart=${VARIABLES[1]}\n")
+			currscript.write("currEnd=${VARIABLES[2]}\n")
+			currscript.write("output=${VARIABLES[3]}\n")
+			currscript.write("Rscript 3_GSEM_CommonFactorGWAS.R $input $currStart $currEnd $output\n")
+		except IOError:
+			eprint("Error : could not write file %s !\n"%(scriptname))
+		finally:
+			currscript.close()
+			
+		###################################### First submission round  ############################################################
+		if args.nosub:
+			print("Finished writing step 3. Flag 'nosub' detected, will not submit to the cluster")
 		else:
-			print("No obvious errors reported")
+			print("Finished writing step 3. Will now submit it to the cluster")
+			finishedJobs=SubmitJobArray(scriptname,"values","logfiles")
+			print("At %s : Finished submitting jobs; waiting for job completion.\n"%(datetime.datetime.now()))
+			CheckCompletion(finishedJobs,120)
+			# Checking for errors using simple grep
+			anyErrors=CheckErrorsArray("logfiles")
+			if len(anyErrors):
+				print("The following errors were reported:\n")
+				for currError in anyErrors:
+					print(currError)
+					exit()
+			else:
+				print("No obvious errors reported")
+				
+			print("Checking that all jobs output. When paralelising genomicSEM some jobs do not finish on first attempt")
+			ExpectedFiles=values.output.values
+			outfiles=glob.glob('%s/CommonFactorGWASout/%s_*.dat'%(normalwd,args.jobname))
+			toRun=[i for i in ExpectedFiles if not i in outfiles]
+			
+###################################### Iterative submission round  ############################################################
+			if args.retry:
+				count=1
+				while len(toRun):
+					count=count+1
+					print("%s subjobs did not finish. Will try rerunning them until they are done; this might be indefinite (until this job is killed) if there are errors!"%(len(toRun)))
+					valuesTmp=values.loc[values.output.isin(toRun),:]
+					valuesTmp.to_csv("values%s"%(count),sep=' ',index=False,header=False)
+					scriptnameTmp="%s_%s"%(scriptname,count)
+					valuesnameTmp="values%s"%(count)
+					subprocess.Popen("sed 's/values/values%s/g' %s > %s "%(count,scriptname,scriptnameTmp),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+					finishedJobs=SubmitJobArray(scriptnameTmp,valuesnameTmp,logdir="logfiles")
+					print("At %s : Finished submitting jobs; waiting for job completion.\n"%(datetime.datetime.now()))
+					CheckCompletion(finishedJobs,120)
+					# Checking for errors using simple grep
+					print("Checking whether all jobs finished running in this round")
+					outfiles=glob.glob('%s/CommonFactorGWASout/%s_*.dat'%(normalwd,args.jobname))
+					toRun=[i for i in ExpectedFiles if not i in outfiles]
+					if count>9:
+						eprint("Number of job resubmissions exceeded 10, this is probably due to an error with the subjobs. Please see the different values and submission files created")
+						exit()
+				# Checking for errors using simple grep
+				anyErrors=CheckErrorsArray("logfiles")
+				if len(anyErrors):
+					print("The following errors were reported:\n")
+					for currError in anyErrors:
+						print(currError)
+						exit()
+				else:
+					print("No obvious errors reported")
+			else:
+				if len(toRun):
+					print("Some subjobs did not finish in time. Try adding the -retry flag to try running them several times.")
+				
+###################################### If not slipt jobs (has never finished; good luck try 24 hrs)  ############################################################
+	else:
+		print("Generating script three")
+		script3="require(GenomicSEM);require(hms);require(data.table);setwd('%s');"%(normalwd)
+		script3+="Model_D_SS <- fread('%s/%s_combinedsumstats.tsv',header=TRUE);"%(normalwd,args.jobname)
+		script3+="load('LDSCoutput_stage2.RData');"
+		script3+="print('Starting the CommonFactorGWAS!');"
+		script3+="results<-commonfactorGWAS(SNPs=Model_D_SS,covstruc=LDSCoutput_stage2,cores=%s,estimation='%s');"%(args.cores,args.estimation)
+		script3+="print('Finished the CommonFactorGWAS!');"
+		script3+="write.table(results, file =%s/%s_CFGWAS.dat, row.names = FALSE, col.names = TRUE, quote = FALSE, sep = '\\t');"%(normalwd,args.jobname)
+		print("R script three looked like this (in a one liner):\n\n%s\n\nPlease check that it looks alright"%(re.sub(";","\n",script3)))
+		
+
+		JobScriptHeader=r'#!/bin/bash'
+		scriptname="3_GSEM_CommonFactorGWAS.PBS" 
+		#jobarray script for submission
+		eprint("Creating Step 3 job script (%s).\n"%(scriptname))
+		try:
+			currscript=open(scriptname, 'w')
+			currscript.write("%s\n"%(JobScriptHeader))
+			currscript.write("#PBS -N CFGWAS_3\n")
+			currscript.write("#PBS -l ncpus=%s,mem=120GB,walltime=24:00:00\n"%(args.cores))
+			currscript.write("cd $PBS_O_WORKDIR\n")
+			currscript.write("module load R/3.5.1\n")
+			currscript.write("Rscript -e \"%s\"\n"%(script3))
+		except IOError:
+			eprint("Error : could not write file %s !\n"%(scriptname))
+		finally:
+			currscript.close()
+
+		if args.nosub:
+			print("Finished writing step 3. Flag 'nosub' detected, will not submit to the cluster")
+		else:
+			print("Finished writing step 3. Will now submit it to the cluster")
+			finishedJobs={}
+			print("Submitted step 3 at %s"%(datetime.datetime.now()))
+			finishedJobs=SubmitScript(scriptname) # hash table with completion info
+			CheckCompletion(finishedJobs)
+			# Checking for errors using simple grep
+			anyErrors=CheckErrors()
+			if len(anyErrors):
+				print("The following errors were reported:\n")
+				for currError in anyErrors:
+					print(currError)
+					print(currError)
+					exit()
+			else:
+				print("No obvious errors reported")
 
 print("Script finished running at %s"%(datetime.datetime.now()))
