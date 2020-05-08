@@ -79,13 +79,13 @@ def SubmitJobArray(scriptName,valuesFile,logdir=None):
 		return(finishedJobs)
 
 def SubmitScript(scriptName):
-    ''' Submits all files with an extension in the current working directory'''
-    import subprocess
-    import re
-    Submits=subprocess.Popen('qsub %s'%(scriptName),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    outlines=Submits.communicate()[0].decode("utf-8")
-    jobs={i.split('.')[0]:0 for i in re.split(pattern='\n',string=outlines) if not i==''}
-    return(jobs)
+	''' Submits all files with an extension in the current working directory'''
+	import subprocess
+	import re
+	Submits=subprocess.Popen('qsub %s'%(scriptName),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	outlines=Submits.communicate()[0].decode("utf-8")
+	jobs={i.split('.')[0]:0 for i in re.split(pattern='\n',string=outlines) if not i==''}
+	return(jobs)
 # Check completion function for submitted jobs to the hpc cluster
 # Input a job dictionary of job IDs and zeros (means they are running), and a predetermined wait time between cluster query
 def CheckCompletion(jobDic,timew=60):
