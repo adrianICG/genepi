@@ -8,7 +8,8 @@ import datetime
 def SubmitJobArray(scriptName,valuesFile,logdir=None):
 	if logdir is None:
 		logdir='./'
-	'''Function to submit a job array, requires the scripname, the values file name and an optional logdir. Returns jobID to keep track of it'''
+	'''Function to submit a job array, requires the PBS scripname, the values file name and an optional logdir. Returns jobID to keep track of it
+	Resource allocation should be performed in the header of the PBS script'''
 	Submit=subprocess.Popen("qsub -J $(echo \"1-$(wc -l %s|cut -f1 -d ' ')\") -o %s -e %s %s"%(valuesFile,logdir,logdir,scriptName),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	outraw=Submit.communicate()
 	outlines=outraw[0].decode("utf-8") + outraw[1].decode("utf-8")
@@ -33,6 +34,77 @@ def SubmitScript(scriptName):
     outlines=Submits.communicate()[0].decode("utf-8")
     jobs={i.split('.')[0]:0 for i in re.split(pattern='\n',string=outlines) if not i==''}
     return(jobs)
+
+
+def isRunning(jobID):
+	submitFinished=subprocess.Popen("qstat %s"%(jobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	qstatSTR=''.join([i.decode("utf-8") for i in submitFinished.communicate()])
+	reresult=re.search('qstat: (\d+(|\[\]))\.hpc.* Job has finished',qstatSTR)
+	if reresult is None:
+		return(True)
+	else:
+		return(False)
+
+def EnforceJobResources(jobID,mem=True,cpus=True,timew=60):
+	'''Check completiom function but also enforces a job or job array sticks to their allocated resources
+	IMPORTANT! This function will KILL the job (or subjobs for an array) even if
+	the memory or cpu breach is not great. CPU restrictions are a bit relaxed 
+	e.g. if you request 12 cores we allow a max cpu usage of 1300.
+	This function naturally keeps running as long as your job is running.'''
+	if not isRunning(jobID):
+		print("The job is not currently running")
+		return(None)
+	while(isRunning(jobID)):
+		if re.search("\[",jobID):#Job array
+			submitSubJobIDs=subprocess.Popen("qstat -1nt %s | cut -f 1 -d '.'"%(jobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+			out=''.join([i.decode("utf-8") for i in submitSubJobIDs.communicate()])
+			subJobIDs=[i for i in re.split('\n',out) if re.match("\d+\[\d+\]", i)]
+			breaching=0
+			for currjobID in subJobIDs:
+				if isRunning(currjobID):
+					submits=subprocess.Popen("qstat -f %s | grep 'resources_used.mem\|Resource_List.mem ='"%(currjobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+					submitsCPU=subprocess.Popen("qstat -f %s | grep 'resources_used.cpupercent\|Resource_List.ncpus'"%(currjobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+					out=''.join([i.decode("utf-8") for i in submits.communicate()])
+					outCPU=''.join([i.decode("utf-8") for i in submitsCPU.communicate()])
+					cpuusedline,cpurequestedline=[i for i in re.split(pattern='\n',string=outCPU) if not i=='']
+					usedline,requestedline=[i for i in re.split(pattern='\n',string=out) if not i=='']
+					usedmem=int(re.search('(\d+)',usedline).group(1))/1e+6
+					requestedmem=int(re.search('(\d+)',requestedline).group(1))
+					usedcpu=int(int(re.search('(\d+)',cpuusedline).group(1))/100)
+					requestedcpu=int(re.search('(\d+)',cpurequestedline).group(1))
+					if requestedmem<usedmem:
+						print("Job %s using %s but requested %s will terminate the job"%(currjobID,usedmem,requestedmem))
+						submits=subprocess.Popen("qdel %s"%(currjobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+						breaching+=1
+					elif requestedcpu<usedcpu:
+						print("Job %s using %s cores but requested %s will terminate the job"%(currjobID,usedcpu,requestedcpu))
+						submits=subprocess.Popen("qdel %s"%(currjobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+						breaching+=1
+			if breaching == 0:
+				print("All subjobs are within memory and cpu specifications")
+			else:
+				print("At this round %s subjobs were killed because they use more memory than requested"%(breaching))
+		else: #Single job
+			submits=subprocess.Popen("qstat -f %s | grep 'resources_used.mem\|Resource_List.mem ='"%(jobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+			submitsCPU=subprocess.Popen("qstat -f %s | grep 'resources_used.cpupercent\|Resource_List.ncpus'"%(jobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+			out=''.join([i.decode("utf-8") for i in submits.communicate()])
+			outCPU=''.join([i.decode("utf-8") for i in submitsCPU.communicate()])
+			cpuusedline,cpurequestedline=[i for i in re.split(pattern='\n',string=out) if not i=='']
+			usedline,requestedline=[i for i in re.split(pattern='\n',string=out) if not i=='']
+			usedmem=int(re.search('(\d+)',usedline).group(1))/1e+6
+			requestedmem=int(re.search('(\d+)',requestedline).group(1))
+			usedcpu=int(int(re.search('(\d+)',cpuusedline).group(1))/100)
+			requestedcpu=int(re.search('(\d+)',cpurequestedline).group(1))
+			if requestedmem<usedmem:
+				print("Job %s using %s but requested %s will terminate the job"%(jobID,usedmem,requestedmem))
+				submits=subprocess.Popen("qdel %s"%(jobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+			elif requestedcpu<usedcpu:
+				print("Job %s using %s but requested %s will terminate the job"%(jobID,usedcpu,requestedcpu))
+				submits=subprocess.Popen("qdel %s"%(jobID),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+			else:
+				print("Job currently sticking to its requirements")
+		time.sleep(timew)	
+
 # Check completion function for submitted jobs to the hpc cluster
 # Input a job dictionary of job IDs and zeros (means they are running), and a predetermined wait time between cluster query
 def CheckCompletion(jobDic,timew=60):
