@@ -32,8 +32,11 @@ def SubmitScript(scriptName):
     import re
     Submits=subprocess.Popen('qsub %s'%(scriptName),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     outlines=Submits.communicate()[0].decode("utf-8")
-    jobs={i.split('.')[0]:0 for i in re.split(pattern='\n',string=outlines) if not i==''}
-    return(jobs)
+	finishedJobs={}
+	jobID=outlines.rstrip()
+	eprint('.. job name is %s'%(jobID))
+	finishedJobs[jobID]=0
+	return(finishedJobs)
 
 
 def isRunning(jobID):
