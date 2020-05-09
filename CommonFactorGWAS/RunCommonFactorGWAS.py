@@ -366,11 +366,11 @@ else:
 				while len(toRun):
 					count=count+1
 					print("%s subjobs did not finish. Will try rerunning them until they are done; this might be indefinite (until this job is killed) if there are errors!"%(len(toRun)))
-					subprocess.Popen("sed 's/values/values%s/g' %s > %s "%(count,scriptname,scriptnameTmp),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 					valuesTmp=values.loc[values.output.isin(toRun),:]
 					valuesTmp.to_csv("values%s"%(count),sep=' ',index=False,header=False)
 					scriptnameTmp="%s_%s"%(scriptname,count)
 					valuesnameTmp="values%s"%(count)
+					subprocess.Popen("sed 's/values/values%s/g' %s > %s "%(count,scriptname,scriptnameTmp),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 					time.sleep(10)
 					finishedJobs=SubmitJobArray(scriptnameTmp,valuesnameTmp,logdir="logfiles")
 					print("At %s : Finished submitting jobs; waiting for job completion.\n"%(datetime.datetime.now()))
