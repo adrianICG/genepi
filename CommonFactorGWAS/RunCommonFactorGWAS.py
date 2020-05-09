@@ -49,7 +49,7 @@ try:
 	import warnings
 	from os import path
 except ImportError as error:
-	print('Python module ('+error.name+') does not seem to be loaded')
+	print('Python module does not seem to be loaded')
 	exit()
 
 ######################################################################
@@ -151,7 +151,7 @@ def CheckErrorsArray(logdir):
 ######################################################################
 
 print("By Adrian Campos @ QIMR Berghofer\nplease let me know of any problems errors\nadrian.campos@qimrberghofer.edu.au\n Thanks to Jackson Thorp for example and debugging advice")
-print("This script is provided as is with no warranty and under under a CC license it is a wrapper for genomicSEM to perform a common factor GWAS. Whether this analysis makes sense is something to consider BEFORE running it")
+print("This script is provided as is with no warranty and under under a CC license it is a wrapper for genomicSEM to perform a common factor GWAS. Whether this analysis makes sense is something to consider before running it")
 
 # Store working directory
 
@@ -164,12 +164,12 @@ normalwd=os.getcwd()
 
 #SKIP THIS WHEN TESTING INTERACTIVELY! (RUN THE SECTIO FOR INTERACTIVE TESTING INSTEAD). !!!!!!!!!!!!!!!
 
-parser = argparse.ArgumentParser(description="INPUT: summary statistic list, must have this columns (header should be included): file(path to the file) binary(is it case control 0/1) selogit(are s.e. in logistic scale 0/1) linprob(is it a case control ran using a linear model 0/1) sampprev(NA for continuous traits) popprev(NA for continuous traits). All sumstats must contain: SNP CHR BP A1 A2 FREQ INFO BETA SE P N different order is accepted. ",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description="INPUT: summary statistic list, must have these columns (header should be included):name(trait name) file(path to the file) binary(is it case control 0/1) selogit(are s.e. in logistic scale 0/1) linprob(is it a case control ran using a linear model 0/1) sampprev(NA for continuous traits) popprev(NA for continuous traits). All sumstats must contain: SNP CHR BP A1 A2 FREQ INFO BETA SE P N different order is accepted. ",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('input',help="Input file")
 parser.add_argument('jobname',default='PRS',help="Job Name")
 parser.add_argument('-minRsq',action='store',default=0.6,type=float,help='Filter out markers with imputed Rsq below this threshold')
 parser.add_argument('-minMAF',action='store',default=0.01,type=float,help='Filter out markers with MAF below this threshold')
-parser.add_argument('-cores',action='store',default=1,type=int,help='Number of cores to perform the common factor GWAS (step 3)')
+parser.add_argument('-cores',action='store',default=1,type=int,help='Number of cores to perform the common factor GWAS (step 3). Raise this if you do not use -splitJobs')
 parser.add_argument('-estimation',action='store',default='DWLS',type=str,help='Estimation method for common factor GWAS (step 3) either ML or DWLS')
 parser.add_argument('-nosub',action='store_true',help="Do not submit any jobs (only generate PBS scripts)")
 parser.add_argument('-skipstep1',action='store_true',help="Do not create nor submit step1 script (use this flag if it ran correctly)")
