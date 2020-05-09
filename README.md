@@ -15,17 +15,17 @@ Intructions for how to set this up working for you (Follow this steps to ensure 
 
 1. Navigate to your home
 ```bash
-$ cd $HOME
+cd $HOME
 ```
 
 2. If you dont already have a bin directory, create one (this is basically where Unix will look for the scripts when you call them)
 ```bash
-$ mkdir bin
+mkdir bin
 ```
 
 3. Append this new directory to your PATH variable by editing the file .bashrc:
 ```bash
-$ nano ~/.bashrc
+nano ~/.bashrc
 ```
 Add the following lines at the end of the file:
 ```
