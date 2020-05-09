@@ -48,6 +48,7 @@ try:
 	import numpy as np
 	import warnings
 	from os import path
+	from QIMRBPBSutils import SubmitJobArray,SubmitScript,CheckCompletion,CheckErrors,CheckErrorsArray
 except ImportError as error:
 	print('Python module does not seem to be loaded')
 	exit()
@@ -59,92 +60,6 @@ except ImportError as error:
 def eprint(*args, **kwargs):
 	print(*args, file=sys.stderr, **kwargs)
 
-def SubmitJobArray(scriptName,valuesFile,logdir=None):
-	Submit=subprocess.Popen("qsub -J $(echo \"1-$(wc -l %s|cut -f1 -d ' ')\") -o %s -e %s %s"%(valuesFile,logdir,logdir,scriptName),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	outraw=Submit.communicate()
-	outlines=outraw[0].decode("utf-8") + outraw[1].decode("utf-8")
-	if outlines.find('qsub') >=0:
-		eprint('qsub returned this message :\n%s\n'%(outlines))
-		AnyErrors=True
-	elif outlines=='':
-		eprint('qsub returned nothing.\n')
-		AnyErrors=True
-	else :
-		finishedJobs={}
-		jobID=outlines.rstrip()
-		eprint('.. job name is %s'%(jobID))
-		finishedJobs[jobID]=0
-		return(finishedJobs)
-
-def SubmitScript(scriptName):
-	''' Submits all files with an extension in the current working directory'''
-	import subprocess
-	import re
-	Submits=subprocess.Popen('qsub %s'%(scriptName),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	outlines=Submits.communicate()[0].decode("utf-8")
-	jobs={i.split('.')[0]:0 for i in re.split(pattern='\n',string=outlines) if not i==''}
-	return(jobs)
-# Check completion function for submitted jobs to the hpc cluster
-# Input a job dictionary of job IDs and zeros (means they are running), and a predetermined wait time between cluster query
-def CheckCompletion(jobDic,timew=60):
-#   print("into CheckCompletion\n")
-	ids=[i for i in jobDic.keys()] #get all job ids 
-	print("At %s : Watching job ids=\n%s\n"%(datetime.datetime.now(),ids))
-	submstr=str("qstat %s 2>&1"%(' '.join(ids))) #submit query for all jobs
-#   print("submstr=\n%s\n"%(submstr))  
-	firstiter=1
-	njobs=len(jobDic)
-	ncomplete=0
-	ncompleteprev=0
-	while ncomplete < njobs:
-		if firstiter != 1:
-			time.sleep(timew)
-		# Query status of the requested jobs.
-		submits=subprocess.Popen(submstr,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-		# Get query output.
-		out=''.join([i.decode("utf-8") for i in submits.communicate()])
-#       print('out=\n%s'%(out))
-		# Split lines of output.
-		OutLines=[i for i in re.split(pattern='\n',string=out) if not i=='']
-		# Get ids of finished jobs. Count. Mark as complete.
-		ncomplete=0
-		for i in OutLines:
-			reresult=re.search('qstat: (\d+(|\[\])\.hpc.*) Job has finished',i)
-			if reresult != None:
-				id=reresult.group(1)
-				if jobDic[id] != 1:
-					print("Job %s has finished.\n"%(id))
-				jobDic[id] = 1
-				ncomplete += 1
-		# Report progress if anything has changed.
-#       print("njobs=%s ncomplete=%s ncompleteprev=%s\n"%(njobs,ncomplete,ncompleteprev))
-		if (firstiter==1) or (ncomplete != ncompleteprev):
-			print("At %s : currently %s of %s job(s) have finished.\n"%(datetime.datetime.now(),ncomplete,njobs))
-		firstiter=0
-		ncompleteprev=ncomplete
-	return(1) # Return something just in case you need to know.
-
-######################################################################
-# Error checker, basically greps Error in all of the files *.e* of the currwd
-def CheckErrors(ext='*.e*'):
-	import subprocess
-	import re
-	Submits=subprocess.Popen("grep 'Error' %s"%(ext),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	outlines=Submits.communicate()[0].decode("utf-8")
-	Errors=[i for i in re.split(pattern='\n',string=outlines) if not i=='']
-	return(Errors)
-	
-def CheckErrorsArray(logdir):
-	import subprocess
-	import re
-	AnyErrors=False
-	logs=glob.glob('%s/*.ER'%(logdir))
-	Errors=[]
-	for i in logs:
-		Submits=subprocess.Popen("grep 'Error' %s"%(i),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-		errlines=Submits.communicate()[0].decode("utf-8")
-		Errors=[i for i in re.split(pattern='\n',string=errlines) if not i=='']
-	return(Errors)
 
 ######################################################################
 #                        Start of main program                       #
