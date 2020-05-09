@@ -4,6 +4,8 @@ import re
 import time
 import datetime
 
+def eprint(*args, **kwargs):
+	print(*args, file=sys.stderr, **kwargs)
 
 def SubmitJobArray(scriptName,valuesFile,logdir=None):
 	if logdir is None:
@@ -22,7 +24,7 @@ def SubmitJobArray(scriptName,valuesFile,logdir=None):
 	else :
 		finishedJobs={}
 		jobID=outlines.rstrip()
-		eprint('.. job name is %s'%(jobID))
+		print('.. job name is %s'%(jobID))
 		finishedJobs[jobID]=0
 		return(finishedJobs)
 
@@ -41,7 +43,7 @@ def SubmitScript(scriptName):
 	else:
 		finishedJobs={}
 		jobID=outlines.rstrip()
-		eprint('.. job name is %s'%(jobID))
+		print('.. job name is %s'%(jobID))
 		finishedJobs[jobID]=0
 		return(finishedJobs)
 
