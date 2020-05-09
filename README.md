@@ -14,35 +14,35 @@ For each folder please check available documentation. You can clone this reposit
 Intructions for how to set this up working for you (Follow this steps to ensure everything runs smoothly!):
 
 1. Navigate to your home
-'''bash
+```bash
 $ cd $HOME
-'''
+```
 
 2. If you dont already have a bin directory, create one (this is basically where Unix will look for the scripts when you call them)
-'''bash
+```bash
 $ mkdir bin
-'''
+```
 
 3. Append this new directory to your PATH variable by editing the file .bashrc:
-'''bash
+```bash
 $ nano ~/.bashrc
-'''
+```
 Add the following lines at the end of the file:
-'''
+```
 export PATH="$PATH:/$HOME/bin"
 export PYTHONPATH="$HOME/bin/genepi/HPCfunctions/"
-'''
+```
 Exit (ctrl+x) and save changes. Setting Python path will be of great importance for python to find the QIMRBHPC utility functions that are common to many scripts. (They will all eventually import those functions)
 
 4. Clone the github repository somewhere in your HOME (in this case ill show you inside bin):
-'''bash
+```bash
 $ cd $HOME/bin/
 $ git clone https://github.com/adrianICG/genepi.git
-'''
+```
 You will get prompted for username and password (github credentials)
 
 5. Create simbolic links for each of the scripts to add them to your bin (they have to be visible right in the bin, and with executable properties; double check that).
-'''bash
+```bash
 cd $HOME/bin/
 ln -s genepi/HPCfunctions/memoryENFORCER.py ./
 ln -s genepi/PRSpipeline/plotPRS.py ./
@@ -51,4 +51,4 @@ ln -s genepi/PRSpipeline/runPRSv2.py ./
 ln -s genepi/CommonFactorGWAS/RunCommonFactorGWAS.py ./
 ln -s genepi/GWAS/runR10SAIGEGWAS.py ./
 ln -s genepi/GWAS/runAGDSGWAS.py ./
-'''
+```
