@@ -36,8 +36,8 @@ Exit (ctrl+x) and save changes. Setting Python path will be of great importance 
 
 4. Clone the github repository somewhere in your HOME (in this case ill show you inside bin):
 ```bash
-$ cd $HOME/bin/
-$ git clone https://github.com/adrianICG/genepi.git
+cd $HOME/bin/
+git clone https://github.com/adrianICG/genepi.git
 ```
 You will get prompted for username and password (github credentials)
 
@@ -52,3 +52,10 @@ ln -s genepi/CommonFactorGWAS/RunCommonFactorGWAS.py ./
 ln -s genepi/GWAS/runR10SAIGEGWAS.py ./
 ln -s genepi/GWAS/runAGDSGWAS.py ./
 ```
+
+Whenever there is an issue fixed or an updated version you can easily update your packages by running:
+```
+cd $HOME/bin/genepi
+git pull
+```
+Do not modify things unless you are working on fixing a bug or issue. In that case please make sure you read git and githubs documentation so you are aware of how to contribute
