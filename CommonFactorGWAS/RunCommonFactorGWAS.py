@@ -48,7 +48,7 @@ try:
 	import numpy as np
 	import warnings
 	from os import path
-	from QIMRBPBSutils import SubmitJobArray,SubmitScript,CheckCompletion,CheckErrors,CheckErrorsArray
+	from QIMRPBSutils import SubmitJobArray,SubmitScript,CheckCompletion,CheckErrors,CheckErrorsArray
 except ImportError as error:
 	print('Python module does not seem to be loaded')
 	exit()
