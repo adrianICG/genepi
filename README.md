@@ -34,6 +34,8 @@ export PYTHONPATH="$HOME/bin/genepi/HPCfunctions/"
 ```
 Exit (ctrl+x) and save changes. Setting Python path will be of great importance for python to find the QIMRBHPC utility functions that are common to many scripts. (They will all eventually import those functions)
 
+You will need to restart your session for these changes to take effect.
+
 4. Clone the github repository somewhere in your HOME (in this case ill show you inside bin):
 ```bash
 cd $HOME/bin/
