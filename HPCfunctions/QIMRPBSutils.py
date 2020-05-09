@@ -27,11 +27,11 @@ def SubmitJobArray(scriptName,valuesFile,logdir=None):
 		return(finishedJobs)
 
 def SubmitScript(scriptName):
-    ''' Submits a single PBS script. Returns JobID to keep track of it'''
-    import subprocess
-    import re
-    Submits=subprocess.Popen('qsub %s'%(scriptName),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    outlines=Submits.communicate()[0].decode("utf-8")
+	''' Submits a single PBS script. Returns JobID to keep track of it'''
+	import subprocess
+	import re
+	Submits=subprocess.Popen('qsub %s'%(scriptName),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	outlines=Submits.communicate()[0].decode("utf-8")
 	if outlines.find('qsub') >=0:
 		eprint('qsub returned this message :\n%s\n'%(outlines))
 		AnyErrors=True
