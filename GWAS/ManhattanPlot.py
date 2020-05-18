@@ -195,7 +195,7 @@ else:
 	#colors1=['#424242' if i%2 else '#a8a7a5' for i in GWAsumstats1.CHR.values] #SCZ colors
 	colors1=[args.C1 if i%2 else args.C2 for i in GWAsumstats1.CHR.values] #BIP colors
 	theta = np.linspace(0.0, max_theta, number_points)
-	points =-np.log10(GWAsumstats1.pval)
+	r =-np.log10(GWAsumstats1.pval)
 	topAx.scatter(theta, r,c=colors1,s=30,rasterized=True)
 	topAxx.plot(theta,[-np.log10(5e-8) for i in theta],color='red',linestyle='solid')
 	topAx.set_rorigin(-10)
@@ -203,7 +203,7 @@ else:
 		topAx.spines[key].set_visible("False")
 		topAx.set_xticks([])
 		topAx.set_yticks([])
-		topAx.set_ylim(0,10)
+	#topAx.set_ylim(0,10)
 	fig.tight_layout()
 	fig.savefig(args.output+'.svg')
 
