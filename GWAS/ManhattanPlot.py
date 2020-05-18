@@ -197,7 +197,7 @@ else:
 	theta = np.linspace(0.0, max_theta, number_points)
 	r =-np.log10(GWAsumstats1.pval)
 	topAx.scatter(theta, r,c=colors1,s=30,rasterized=True)
-	topAxx.plot(theta,[-np.log10(5e-8) for i in theta],color='red',linestyle='solid')
+	topAx.plot(theta,[-np.log10(5e-8) for i in theta],color='red',linestyle='solid')
 	topAx.set_rorigin(-10)
 	for key in topAx.spines:
 		topAx.spines[key].set_visible("False")
