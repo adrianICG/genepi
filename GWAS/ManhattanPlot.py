@@ -4,28 +4,28 @@
 
 from sys import exit
 try:
-    import matplotlib
-    matplotlib.use('Agg')
-    matplotlib.rcParams['agg.path.chunksize'] = 100000
-    import pandas as pd
-    import re
-    import argparse
-    import subprocess
-    import seaborn
-    import os
-    import glob
-    import time
-    import sys
-    import datetime
-    import socket
-    import numpy as np
-    import warnings
-    import seaborn as sns
-    import matplotlib.pyplot as plt
+	import matplotlib
+	matplotlib.use('Agg')
+	matplotlib.rcParams['agg.path.chunksize'] = 100000
+	import pandas as pd
+	import re
+	import argparse
+	import subprocess
+	import seaborn
+	import os
+	import glob
+	import time
+	import sys
+	import datetime
+	import socket
+	import numpy as np
+	import warnings
+	import seaborn as sns
+	import matplotlib.pyplot as plt
 except ImportError:
-    print('Python module does not seem to be loaded')
-    exit()
-    
+	print('Python module does not seem to be loaded')
+	exit()
+	
 ####################Arg parsing #########################
 parser = argparse.ArgumentParser(description="input summary statistics, should contain at least the following columns: SNPrs,CHR,BP,REF,ALT,beta,pval other header names are accepted. SUMSTATS are assumed to be QCed already, specially for imputation. This script includes ambiguous strand and indel removal. Accepted synonims are: pval -> p pvalue pvalues	, snp -> snpid SNPrs rsnumber rs snprs rsid ,	alt -> effect_allele a1  minor_allele effect_allele ea	, reference-> reference_allele ref a2 oa , chr-> CHR chrom chromosome	,	pos-> position bp	,	beta->beta effsize logor log(or) or. This is all capslock insensitive thus BP==bp")
 parser.add_argument('input1',help="Input file gwa sumstats 1")
@@ -44,11 +44,11 @@ args = parser.parse_args()
 ######################### TO TEST INTERACTIVELY #####################
 '''
 class z():
-    def __init__(self):
-        self.input1='daner_PGC_BIP32b_mds7a.loo.no.bmau'
-        self.T1=''
-        self.NAmarker='.'
-        self.output='BIP32b'
+	def __init__(self):
+		self.input1='daner_PGC_BIP32b_mds7a.loo.no.bmau'
+		self.T1=''
+		self.NAmarker='.'
+		self.output='BIP32b'
 args=z()
 '''
 
@@ -70,7 +70,7 @@ colConverter={}
 
 ####### NOTE that in this code effect allele equals the allele that has an effect on the phenotype, whereas the reference allele is considered the basis (dosage of 0)
 HeaderSynonims={'pval':'pval','p':'pval','p.value':'pval','pvalue':'pval','pvalues':'pval','pvalues':'pval','p_bolt_lmm':'pval','mtag_pval':'pval','p-value':'pval','pval_estimate':'pval',
-                'markername':'SNPrs','snp':'SNPrs','snpid':'SNPrs','rsnumber':'SNPrs','rs':'SNPrs', 'snprs':'SNPrs','rsid':'SNPrs',
+				'markername':'SNPrs','snp':'SNPrs','snpid':'SNPrs','rsnumber':'SNPrs','rs':'SNPrs', 'snprs':'SNPrs','rsid':'SNPrs',
 				'chr':'CHR','chrom':'CHR','chromosome':'CHR',
 				'pos':'BP','position':'BP','bp':'BP','bpos':'BP'}
 				
@@ -121,8 +121,8 @@ GWAsumstats1 = pd.read_table(inputGWAS1,header=0,index_col=None,usecols=ColsToUs
 GWAsumstats1.columns=[colConverter[i] for i in GWAsumstats1.columns]
 GWAsumstats1['SNPvariant']=GWAsumstats1['CHR'].apply(str)+':'+GWAsumstats1['BP'].apply(str)
 for col in GWAsumstats1.columns:
-    if col in numericCols:
-        GWAsumstats1.loc[:,col]=pd.to_numeric(GWAsumstats1.loc[:,col],errors='coerce')
+	if col in numericCols:
+		GWAsumstats1.loc[:,col]=pd.to_numeric(GWAsumstats1.loc[:,col],errors='coerce')
 
 print("Read %s snps from the summary statistics"%(len(GWAsumstats1.index)))		
 
@@ -138,23 +138,23 @@ dftmp=dftmp.loc[:,['SNPrs','CHR','BP','SNPvariant']]
 dftmp.drop_duplicates(inplace=True)
 
 if sum(dftmp.SNPrs.duplicated()):
-    print("There are duplcated variants in sumstats with different positions. One will randomly be removed")
-    dftmp=dftmp.loc[~dftmp.SNPrs.duplicated(),:]
+	print("There are duplcated variants in sumstats with different positions. One will randomly be removed")
+	dftmp=dftmp.loc[~dftmp.SNPrs.duplicated(),:]
 
 pastlen=len(dftmp)
 dftmp.dropna(inplace=True)
 GWAsumstats1.dropna(inplace=True)
 if len(dftmp)!=pastlen:
-    print("There were NAs in the sumstats, they were removed automatically but you might want to double check")
+	print("There were NAs in the sumstats, they were removed automatically but you might want to double check")
 
 chrs=set(dftmp.CHR) #make sure its sorted
 pastChr=chrs.pop()
 maxBP=max(dftmp.loc[dftmp.CHR==pastChr,'BP'])
 for chr in chrs:
-    tmpBP=dftmp.loc[dftmp.CHR==chr,'BP']
-    tmpBP=tmpBP+maxBP
-    dftmp.loc[tmpBP.index,'BP']=tmpBP
-    maxBP=max(dftmp.loc[dftmp.CHR==chr,'BP'])
+	tmpBP=dftmp.loc[dftmp.CHR==chr,'BP']
+	tmpBP=tmpBP+maxBP
+	dftmp.loc[tmpBP.index,'BP']=tmpBP
+	maxBP=max(dftmp.loc[dftmp.CHR==chr,'BP'])
 
 dftmp.set_index(dftmp.SNPrs,inplace=True)
 
@@ -186,6 +186,8 @@ if not args.circular:
 	fig.tight_layout()
 	fig.savefig(args.output+'.svg')
 else:
+	plt.rcParams['xtick.bottom'] = plt.rcParams['xtick.labelbottom'] = False
+	plt.rcParams['xtick.top'] = plt.rcParams['xtick.labeltop'] = True
 	fig = plt.figure()
 	max_theta = 2.0 * np.pi
 	number_points = len(GWAsumstats1.pval)
@@ -195,9 +197,11 @@ else:
 	#colors1=['#424242' if i%2 else '#a8a7a5' for i in GWAsumstats1.CHR.values] #SCZ colors
 	colors1=[args.C1 if i%2 else args.C2 for i in GWAsumstats1.CHR.values] #BIP colors
 	theta = np.linspace(0.0, max_theta, number_points)
+	dftmp['theta']=theta
 	r =-np.log10(GWAsumstats1.pval)
 	topAx.scatter(theta, r,c=colors1,s=30,rasterized=True)
-	topAx.plot(theta,[-np.log10(5e-8) for i in theta],color='red',linestyle='solid')
+	topAx.plot(theta,[-np.log10(5e-8) for i in theta],color='red',linestyle='solid',rasterized=True)
+	topAx.plot(theta,[-np.log10(1e-5) for i in theta],color='blue',linestyle='dashed',rasterized=True)
 	topAx.set_rorigin(-10)
 	for key in topAx.spines:
 		topAx.spines[key].set_visible("False")
@@ -205,6 +209,15 @@ else:
 		topAx.set_yticks([])
 	#topAx.set_ylim(0,10)
 	fig.tight_layout()
+	chrs=set(dftmp.CHR) #To make xticks
+	medians=[] #postions
+	labels=[] #labels
+	for chr in chrs:
+		medians.append(np.median(dftmp.loc[dftmp.CHR==chr,'theta']))
+		labels.append(str(chr))
+	topAx.set_xticks(medians) #add xticklabels
+	topAx.set_xticklabels(labels,fontsize=15)
+	topAx.tick_params(axis='x',grid_linewidth=0)
 	fig.savefig(args.output+'.svg')
 
 print("Finished running at %s"%(datetime.datetime.now()))
