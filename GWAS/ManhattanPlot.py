@@ -190,14 +190,14 @@ else:
 	plt.rcParams['xtick.top'] = plt.rcParams['xtick.labeltop'] = True
 	fig = plt.figure()
 	max_theta = 2.0 * np.pi
-	number_points = len(dftmp.pval)
+	number_points = len(GWAsumstats1.pval)
 	topAx=fig.add_subplot(111,projection='polar')
 	fig.set_size_inches(15,15)
 	#Manhattan 1
 	#colors1=['#424242' if i%2 else '#a8a7a5' for i in GWAsumstats1.CHR.values] #SCZ colors
 	colors1=[args.C1 if i%2 else args.C2 for i in GWAsumstats1.CHR.values] #BIP colors
 	theta = np.linspace(0.0, max_theta, number_points)
-	dftmp['theta']=theta
+	GWAsumstats1['theta']=theta
 	r =-np.log10(GWAsumstats1.pval)
 	topAx.scatter(theta, r,c=colors1,s=30,rasterized=True)
 	topAx.plot(theta,[-np.log10(5e-8) for i in theta],color='red',linestyle='solid',rasterized=True)
@@ -209,11 +209,11 @@ else:
 		topAx.set_yticks([])
 	#topAx.set_ylim(0,10)
 	fig.tight_layout()
-	chrs=set(dftmp.CHR) #To make xticks
+	chrs=set(GWAsumstats1.CHR) #To make xticks
 	medians=[] #postions
 	labels=[] #labels
 	for chr in chrs:
-		medians.append(np.median(dftmp.loc[dftmp.CHR==chr,'theta']))
+		medians.append(np.median(GWAsumstats1.loc[GWAsumstats1.CHR==chr,'theta']))
 		labels.append(str(chr))
 	topAx.set_xticks(medians) #add xticklabels
 	topAx.set_xticklabels(labels,fontsize=15)
