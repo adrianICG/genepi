@@ -190,7 +190,7 @@ else:
 	plt.rcParams['xtick.top'] = plt.rcParams['xtick.labeltop'] = True
 	fig = plt.figure()
 	max_theta = 2.0 * np.pi
-	number_points = len(GWAsumstats1.pval)
+	number_points = len(dftmp.pval)
 	topAx=fig.add_subplot(111,projection='polar')
 	fig.set_size_inches(15,15)
 	#Manhattan 1
