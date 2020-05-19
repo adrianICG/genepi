@@ -36,10 +36,12 @@ parser.add_argument('-sep',help="file delimiter ",default='\s+')
 parser.add_argument('-circular',help="Experimental plot ciruclar manhattan plot",action='store_true')
 parser.add_argument('-o','--output',help="output name without extension",default='Manhattan')
 parser.add_argument('-namrk','--NAmarker',nargs='+',default=['.'],help='Use this marker(s) as missing value (separate them with a space), default is . use this flag if you missings are not nan or na (e.g. -99 -9 .) It is best to use this flag at the end as it receives an undefinite number of arguments')
+parser.add_argument('-kwrgs','--kwargs',help="string with a dictionary of kwargs for the plot (read python and seaborn docs on kwargs)",default="{}")
 
 
 parser._actions[0].help="Print this help message and exit"
 args = parser.parse_args()
+kwargs=eval(args.kwargs)
 
 ######################### TO TEST INTERACTIVELY #####################
 '''
@@ -182,7 +184,7 @@ if not args.circular:
 	topAx.set_title(args.T1,fontsize=15)
 	topAx.axhline(y=-np.log10(5e-8),color='red')
 	topAx.axhline(y=-np.log10(1e-5),linestyle='--',color='blue')
-
+	topAx.set(**kwargs)
 	fig.tight_layout()
 	fig.savefig(args.output+'.svg')
 else:
@@ -218,6 +220,7 @@ else:
 	topAx.set_xticks(medians) #add xticklabels
 	topAx.set_xticklabels(labels,fontsize=15)
 	topAx.tick_params(axis='x',grid_linewidth=0)
+	topAx.set(**kwargs)
 	fig.savefig(args.output+'.svg')
 
 print("Finished running at %s"%(datetime.datetime.now()))
