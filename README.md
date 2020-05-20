@@ -60,4 +60,8 @@ Whenever there is an issue fixed or an updated version you can easily update you
 cd $HOME/bin/genepi
 git pull
 ```
-Do not modify things unless you are working on fixing a bug or issue. In that case please make sure you read git and githubs documentation so you are aware of how to contribute
+Do not modify things unless you are working on fixing a bug or issue. In that case please make sure you read git and githubs documentation so you are aware of how to contribute. If you modify something by mistake git will tell you you can't update (pull) because something is locally changed. You will need to either add and commit those changes to the main repository (only do this if youa re fixing a bug or uploading a new script etc); or discard your changes:
+```
+cd $HOME/bin/genepi
+git checkout [files that were changed]
+```
