@@ -217,6 +217,8 @@ tmpdf.to_csv(jobName+'.pheno',index=False,sep="\t")
 ################Save file ######################
 if args.covdescript!="None" or numPCs:
     covarColLine='covarColList = c(\''+'\',\''.join(covariates+qcovariates)+'\')'
+else:
+    covarColLine='NULL'
 
 
 shebang=r'#!/bin/bash' #header to add to each file consider env bash
