@@ -37,6 +37,7 @@ parser.add_argument('-chroms','--chromosomes',nargs='+',default=list(range(1,23)
 parser.add_argument('-maf','--minMAF',default=0.01,help="Minimum MAF threshold to include variant")
 parser.add_argument('-numPCs','--NUMBERofPCs',default=10,help="How many PCs to include as covariates use 0 to add none")
 parser.add_argument('-nosub','--DoNotSubmit',help="Do not submit jobs (only generate PBS scripts)",action='store_true')
+parser.add_argument('-chip',help="Which chip? All, GSA, Hap etc; default All",default='All')
 parser.add_argument('-duplicates','--DealDuplicates',help="automatically deal with dups valid is nothing (by default), remove or average",default = None)
 
 
@@ -223,12 +224,16 @@ else:
 
 shebang=r'#!/bin/bash' #header to add to each file consider env bash
 
+if args.chip=="GSA"
+    plinkFileLine="/reference/genepi/GWAS_release/Release10/Scripts/SAIGE/required_files/GWAS_Release10_draft4_02102019"
+else:
+    plinkFileLine="/reference/genepi/GWAS_release/Release10/Scripts/SAIGE/required_files/GWAS_Release10_consensusset_SAIGE"
 print("Creating the STEP1 submission script")
 with open('Step1%s.PBS1'%(jobName), 'w') as currscript:
     currscript.write(shebang+'\n') #write shebang
     #write PBS headers
     currscript.write("#PBS -N SAIGEstep1\n#PBS -r n\n#PBS -l mem=40GB,walltime=30:00:00,ncpus=5\nmodule load R/3.5.1\ncd $PBS_O_WORKDIR\n")
-    currscript.write("R -e \"library(SAIGE);fitNULLGLMM(plinkFile='/reference/genepi/GWAS_release/Release10/Scripts/SAIGE/required_files/GWAS_Release10_consensusset_SAIGE',phenoFile='%s',phenoCol = '%s',%s,%s,sampleIDColinphenoFile='IID',outputPrefix = 'SAIGE_Step1_%s', nThreads = 5)\""%(jobName+'.pheno',phenotype,traitTypeLine,covarColLine,jobName))
+    currscript.write("R -e \"library(SAIGE);fitNULLGLMM(plinkFile='%s',phenoFile='%s',phenoCol = '%s',%s,%s,sampleIDColinphenoFile='IID',outputPrefix = 'SAIGE_Step1_%s', nThreads = 5)\""%(plinkFileLine,jobName+'.pheno',phenotype,traitTypeLine,covarColLine,jobName))
 # Submit step1
 
 if args.DoNotSubmit==True:
