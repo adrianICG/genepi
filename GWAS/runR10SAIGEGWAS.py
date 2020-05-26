@@ -37,7 +37,7 @@ parser.add_argument('-chroms','--chromosomes',nargs='+',default=list(range(1,23)
 parser.add_argument('-maf','--minMAF',default=0.01,help="Minimum MAF threshold to include variant")
 parser.add_argument('-numPCs','--NUMBERofPCs',default=10,help="How many PCs to include as covariates use 0 to add none")
 parser.add_argument('-nosub','--DoNotSubmit',help="Do not submit jobs (only generate PBS scripts)",action='store_true')
-parser.add_argument('-chip',help="Which chip? All, GSA, Hap etc; default All",default='All')
+parser.add_argument('-chip',help="Which chip? All, GSA, Omni, Hap etc; default All. Do not change if you are not sure",default='All')
 parser.add_argument('-duplicates','--DealDuplicates',help="automatically deal with dups valid is nothing (by default), remove or average",default = None)
 
 
