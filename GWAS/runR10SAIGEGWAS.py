@@ -224,7 +224,7 @@ else:
 
 shebang=r'#!/bin/bash' #header to add to each file consider env bash
 
-if args.chip=="GSA"
+if args.chip=="GSA":
     plinkFileLine="/reference/genepi/GWAS_release/Release10/Scripts/SAIGE/required_files/GWAS_Release10_draft4_02102019"
 else:
     plinkFileLine="/reference/genepi/GWAS_release/Release10/Scripts/SAIGE/required_files/GWAS_Release10_consensusset_SAIGE"
