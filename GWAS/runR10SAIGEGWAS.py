@@ -227,7 +227,7 @@ shebang=r'#!/bin/bash' #header to add to each file consider env bash
 if args.chip=="All":
     plinkFileLine="/reference/genepi/GWAS_release/Release10/Scripts/SAIGE/required_files/GWAS_Release10_consensusset_SAIGE"
 else:
-    plinkFileLine="/reference/genepi/GWAS_release/Release10/Scripts/SAIGE/required_files/GWAS_Release10_draft4_02102019_%s"%(args.chip)
+    plinkFileLine="/reference/genepi/GWAS_release/Release10/Scripts/SAIGE/required_files/GWAS_Release10_%s_SAIGE.fams"%(args.chip)
 print("Creating the STEP1 submission script")
 with open('Step1%s.PBS1'%(jobName), 'w') as currscript:
     currscript.write(shebang+'\n') #write shebang
