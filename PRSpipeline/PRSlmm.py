@@ -361,7 +361,8 @@ FinaldictPval={}
 for currhsqname in hsqFiles:
     with open(currhsqname,'r') as currhsq: #open file
         name=re.split('_',currhsqname) #obtain name
-        currpheno='_'.join(name[0:len(name)-1]) 
+        currpheno='_'.join(name[0:len(name)-1])
+		currpheno=re.sub("_Std", "", currpheno)
         currcutoff=name[len(name)-1].replace('.hsq','')
         if currpheno not in FinaldictFixedEff:
         ## Initialize values on the hash tables
