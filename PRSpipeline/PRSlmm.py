@@ -365,7 +365,7 @@ for currhsqname in hsqFiles:
         currpheno=re.sub("_Std", "", currpheno)
         currcutoff=name[len(name)-1].replace('.hsq','')
         if re.search("_Std",currhsqname):
-            currcutoff="Std_"currcutoff
+            currcutoff="Std_"+currcutoff
         if currpheno not in FinaldictFixedEff:
         ## Initialize values on the hash tables
             FinaldictFixedEff[currpheno]={currcutoff:None}
