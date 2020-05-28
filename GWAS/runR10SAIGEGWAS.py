@@ -232,7 +232,7 @@ print("Creating the STEP1 submission script")
 with open('Step1%s.PBS1'%(jobName), 'w') as currscript:
     currscript.write(shebang+'\n') #write shebang
     #write PBS headers
-    currscript.write("#PBS -N SAIGEstep1\n#PBS -r n\n#PBS -l mem=40GB,walltime=30:00:00,ncpus=5\nmodule load R/3.5.1\ncd $PBS_O_WORKDIR\n")
+    currscript.write("#PBS -N SAIGEstep1\n#PBS -r n\n#PBS -l mem=40GB,walltime=30:00:00,ncpus=5\nmodule load miniconda3/current\nsource activate RSAIGE\ncd $PBS_O_WORKDIR\n")
     currscript.write("R -e \"library(SAIGE);fitNULLGLMM(plinkFile='%s',phenoFile='%s',phenoCol = '%s',%s,%s,sampleIDColinphenoFile='IID',outputPrefix = 'SAIGE_Step1_%s', nThreads = 5)\""%(plinkFileLine,jobName+'.pheno',phenotype,traitTypeLine,covarColLine,jobName))
 # Submit step1
 
@@ -275,7 +275,7 @@ for chrom in chrs: #for each chromosome that we have clumping results for
         varianceRatioFile='SAIGE_Step1_%s.varianceRatio.txt'%(jobName)
         with open('chrom%s_block%s'%(chrom,numblock)+'.PBS', 'w') as currscript:
             currscript.write(shebang+'\n')
-            currscript.write("#PBS -N SAIGE\n#PBS -r n\n#PBS -l ncpus=1,mem=10GB,walltime=20:00:00\nmodule load R/3.5.1\ncd $PBS_O_WORKDIR\n")
+            currscript.write("#PBS -N SAIGE\n#PBS -r n\n#PBS -l ncpus=1,mem=10GB,walltime=20:00:00\nmodule load miniconda3/current\nsource activate RSAIGE\ncd $PBS_O_WORKDIR\n")
             currscript.write("R -e \"library(SAIGE);SPAGMMATtest(vcfFile='%s',vcfFileIndex='%s',vcfField='DS',chrom='%s',sampleFile='%s',GMMATmodelFile='%s',varianceRatioFile='%s',SAIGEOutputFile='GWAS_out/%s_sumstats_chr%s_block%s.saige',minMAF = %s,IsOutputAFinCaseCtrl = %s,LOCO = %s)\""%(vcfFile,vcfTbix,chrom,sampleFile,GMMATmodelFile,varianceRatioFile,jobName,chrom,numblock,args.minMAF,args.IsOutputAFinCaseCtrl,args.LOCO))
             
 if args.DoNotSubmit==True:
