@@ -273,7 +273,7 @@ parser.add_argument('-compileblocks', type=str2bool, default='True', action='sto
 parser.add_argument('-mergeCTandSB', type=str2bool, default='False', action='store', help="Compile SbayesR and Clumping+ Thresholding results in a final single file")
 
 #.. SBayes R optional changes
-parser.add_argument('SBRexcludeMHC',type=str2bool,,default='True', action='store',help="Exclude the MHC region from SBayes R, set to false to comapre with methods not excluding MHC region")
+parser.add_argument('SBRexcludeMHC',type=str2bool,default='True', action='store',help="Exclude the MHC region from SBayes R, set to false to comapre with methods not excluding MHC region")
 parser.add_argument('SBRhsq',default=None, help="Optional SNP based heritability prior value")
 parser.add_argument('SBRseed',default=None, help="Optional seed for SBayesR, for debugging")
 
