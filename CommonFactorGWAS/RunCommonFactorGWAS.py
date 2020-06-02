@@ -73,7 +73,7 @@ normalwd=os.getcwd()
 #SKIP THIS WHEN TESTING INTERACTIVELY! (RUN THE SECTIO FOR INTERACTIVE TESTING INSTEAD). !!!!!!!!!!!!!!!
 
 parser = argparse.ArgumentParser(description="INPUT: summary statistic list, must have these columns (header should be included):name(trait name) file(path to the file) binary(is it case control 0/1) selogit(are s.e. in logistic scale 0/1) linprob(is it a case control ran using a linear model 0/1) sampprev(NA for continuous traits) popprev(NA for continuous traits). All sumstats must contain: SNP CHR BP A1 A2 FREQ INFO BETA SE P N different order is accepted. ",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('input',help="Input file")
+parser.add_argument('input',help="Input file") 
 parser.add_argument('jobname',default='PRS',help="Job Name")
 parser.add_argument('-minRsq',action='store',default=0.6,type=float,help='Filter out markers with imputed Rsq below this threshold')
 parser.add_argument('-minMAF',action='store',default=0.01,type=float,help='Filter out markers with MAF below this threshold')
@@ -94,14 +94,14 @@ args = parser.parse_args()
 #                        Initial checks                              #
 ######################################################################
 AnyError=0
-if args.estimation not in ['DWLS','ML']:
-	eprint("Estimation argument not correct, please double check it is either DLWS or ML")
+if args.estimation not in ['DWLS','ML']: #If estimation is not one of the correct ones
+	eprint("Estimation argument not correct, please double check it is either DLWS or ML") # eprint is defined in QIMRPBSutils
 	AnyError=1
 
-if args.cores > 16:
+if args.cores > 16: #If user asked for too many cores (unused if -splitJobs)
 	eprint("Warning you requested too many cores for the common factot GWAS, are you sure thats necessary?")
 
-try:
+try: #try reading input fail, error if couldn't read
 	inputDataFrame=pd.read_csv(args.input,sep="\s+",usecols=['name','file','binary','selogit','linprob','sampprev','popprev'])
 except ValueError:
 	eprint("Could not read list of summary statistics, are you sure all the columns are present?\n Expected columns are:name	file(path to the file) binary(is it case control 0/1) selogit(are s.e. in logistic scale 0/1) linprob(is it a case control ran using a linear model 0/1) sampprev(NA for continuous traits) popprev(NA for continuous traits) ")
@@ -116,25 +116,25 @@ selogit=[]
 OLS=[]
 linprob=[]
 prop=[]
-for row in inputDataFrame.index:
-	if inputDataFrame.loc[row,'binary']:
-		OLS.append('F')
-		if inputDataFrame.loc[row,'linprob']:
-			linprob.append('T')
-			selogit.append('F')
-			prop.append(inputDataFrame.loc[row,'sampprev'])
+for row in inputDataFrame.index: # For each of the input sumstats
+	if inputDataFrame.loc[row,'binary']: # If its binary
+		OLS.append('F') #then it was not OLS (for GSEM purposes)
+		if inputDataFrame.loc[row,'linprob']: # If its binary and a linear probabiliy model was used (e.g. Bolt or any other linear regression)
+			linprob.append('T') # save true for linprob
+			selogit.append('F') # standard errors can't be in logistic scare
+			prop.append(inputDataFrame.loc[row,'sampprev']) #store population and sample prevalences
 			print("%s is a binary phenotype, but analyzed with a linear model, thus standard errors cannot be in the logistic scale. GenomicSEM will transform this betas to the logistic scale based on the sample prevalence\n"%(inputDataFrame.loc[row,'file']))
-		else:
-			linprob.append('F')
-			if inputDataFrame.loc[row,'selogit']:
+		else: #if binary bot not linprob (logistic)
+			linprob.append('F') 
+			if inputDataFrame.loc[row,'selogit']: #We need to know hether errors are in logistic scare or not, can't assume that
 				selogit.append('T')
 			else:
 				selogit.append('F')
 			prop.append('NA')
 			print("%s is a binary phenotype, analyzed with a logistic model. Your input for selogit (%s) will be used to determine whether standard errors are in the logistic scale\n"%(inputDataFrame.loc[row,'file'],inputDataFrame.loc[row,'selogit']))
 
-	else:
-		OLS.append('T')
+	else: #If its not binary the folllowing is true:
+		OLS.append('T') 
 		selogit.append('F')
 		linprob.append('F')
 		prop.append('NA')
@@ -149,9 +149,9 @@ if AnyError:
 
 if args.skipstep1:
 	print("Skipping step 1 as requested by user")
-	Step1ID={}
+	Step1ID={} #we need this blank to enable compatiblity further on
 else:
-	print("Generating script one")
+	print("Generating script one") #Below we are creating a string with the R script for script 1.
 	script1="require(GenomicSEM);setwd('%s');files<-c("%(normalwd)
 	script1+=','.join(["'%s'"%(i) for i in inputDataFrame.loc[:,'file']])
 	script1+=");trait.names<-c("
@@ -176,6 +176,7 @@ else:
 	scriptname="1_GSEM_multivariateLDSC.PBS" 
 	#jobarray script for submission
 	eprint("Creating Step 1 job script (%s).\n"%(scriptname))
+	#Below we create the actual script from the string that was constructed above
 	try:
 		currscript=open(scriptname, 'w')
 		currscript.write("%s\n"%(JobScriptHeader))
@@ -188,14 +189,16 @@ else:
 		eprint("Error : could not write file %s !\n"%(scriptname))
 	finally:
 		currscript.close()
-		
+	#Only submit if submission is requested
 	if args.nosub:
 		print("Finished writing step 1. Flag 'nosub' detected, will not submit to the cluster")
 	else:
 		print("Finished writing step 1. Will now submit it to the cluster")
 		finishedJobs={}
 		print("Submitted step 1 at %s"%(datetime.datetime.now()))
-		Step1ID=SubmitScript(scriptname) # hash table with completion info
+		Step1ID=SubmitScript(scriptname) # SubmitScript can be explored in QIMRPBSutils python package
+		
+#Step one and two can be done in parallel so we continue:
 
 ######################################################################
 #                     Step two merging sumstats                      #
@@ -254,11 +257,10 @@ else:
 		print("Finished writing step 2. Will now submit it to the cluster")
 		finishedJobs={}
 		print("Submitted step 2 at %s"%(datetime.datetime.now()))
-		Step2ID=SubmitScript(scriptname) # hash table with completion info
-		finishedJobs={**Step1ID,**Step2ID}
-		CheckCompletion(finishedJobs)
-		# Checking for errors using simple grep
-		anyErrors=CheckErrors()
+		Step2ID=SubmitScript(scriptname)
+		finishedJobs={**Step1ID,**Step2ID} #This table contains the jobIDs of both step1 and step2 jobs, to track their completion
+		CheckCompletion(finishedJobs) #This function will track all the job completion
+		anyErrors=CheckErrors() # Checking for errors using simple grep
 		if len(anyErrors):
 			print("The following errors were reported:\n")
 			for currError in anyErrors:
@@ -269,8 +271,10 @@ else:
 			print("No obvious errors reported")
 
 	if AnyError:
-		eprint("Please double check the errors above and resubmit the job")
+		eprint("Please double check the errors above and resubmit the jobs")
 		exit()
+		
+		
 ######################################################################
 #                 Step three common factor GWAS                      #
 ######################################################################
@@ -278,28 +282,30 @@ else:
 if args.skipstep3:
 	print("Skipping step 3 as requested by user")
 else:
-	if args.splitJobs:
+	if args.splitJobs: #If the GWAS calculation steps will be paralelised (highly recommended) 
 		print("Will split the common factor GWAS jobs into subjobs. This has shown great speed but some jobs never finish and need to be ran again")
 		print("Creating out directory and logfiles directory")
 		print("Creating values file based on combined sumstats number of lines")
+		
 		###################################### Values file for JOB Array ####################################################
-		submitWC=subprocess.Popen("wc -l %s/%s_combinedsumstats.tsv"%(normalwd,args.jobname),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		submitWC=subprocess.Popen("wc -l %s/%s_combinedsumstats.tsv"%(normalwd,args.jobname),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE) #Creating a working directory
 		wcSTR=''.join([i.decode("utf-8") for i in submitWC.communicate()])
 		reresult=int(re.search('(\d+)',wcSTR).group(1))-1
 		start=[]
 		stop=[]
+		# Create blocks of SNPs to process, current size is 10,000 I found it a sweet spot for speed.
 		for i in range(1,reresult,10000):
 			start.append(i)
 			stop.append(i+9999)
 		stop[len(stop)-1]=reresult
 		input=["%s/%s_combinedsumstats.tsv"%(normalwd,args.jobname) for i in range(len(start))]
 		output=["%s/CommonFactorGWASout/%s_%s_%s.dat"%(normalwd,args.jobname,start[i],stop[i]) for i in range(len(start))]
-		values=pd.DataFrame({"input":input,"start":start,"stop":stop,"output":output})
-		values.to_csv("values",sep=' ',index=False,header=False)
-		subprocess.call(['mkdir','-p','CommonFactorGWASout','logfiles'])
+		values=pd.DataFrame({"input":input,"start":start,"stop":stop,"output":output}) #create dataframe with columns to be sued for the job array
+		values.to_csv("values",sep=' ',index=False,header=False) #save that table with the name  "values"
+		subprocess.call(['mkdir','-p','CommonFactorGWASout','logfiles']) #create output directories and logfile directories
 		
 		###################################### Base script (R) for JOB Array ####################################################
-		print("Generating script three (Rbase script)")
+		print("Generating script three (Rbase script)") #This is similar to steps one and two above, but it is a base script for a PBS job array
 		script3="args = commandArgs(trailingOnly=TRUE)\ninput1 <- args[1]\nn_start <- args[2]\nn_stop <- args[3]\noutput <- args[4]\n"
 		script3+="require(GenomicSEM)\nrequire(hms)\nrequire(data.table)\nsetwd('%s')\n"%(normalwd)
 		script3+="Model_D_SS <- fread('%s/%s_combinedsumstats.tsv',header=TRUE)\n"%(normalwd,args.jobname)
@@ -319,7 +325,7 @@ else:
 		scriptname="GSEM_CommonFactor_Array.PBS" 
 		#jobarray script for submission
 		eprint("Creating Step 3 job script (%s).\n"%(scriptname))
-		try:
+		try: #writing the job arry submission script which will call "3_GSEM_CommonFactorGWAS.R" parametrised by the "values" file
 			currscript=open(scriptname, 'w')
 			currscript.write("%s\n"%(JobScriptHeader))
 			currscript.write("#PBS -N CFGWAS_3\n")
@@ -361,7 +367,7 @@ else:
 			toRun=[i for i in ExpectedFiles if not i in outfiles]
 			
 ###################################### Iterative submission round  ############################################################
-			if args.retry:
+			if args.retry: #if split jobs was used, retry is strongly recommended. Jobs fail very often probably due to lavan needing to start a localhost which can cause collision in the same node
 				count=1
 				while len(toRun):
 					count=count+1
@@ -397,6 +403,8 @@ else:
 			print ("All common factor GWAS subjobs finished running. Merging results")
 			finalDF=pd.concat((pd.read_csv(f,header=0,sep='\t') for f in ExpectedFiles))
 			finalDF.to_csv("%s/%s_CFGWAS.dat"%(normalwd,args.jobname),sep="\t",index=False)
+			
+
 ###################################### If not slipt jobs (has never finished; good luck try 24 hrs)  ############################################################
 	else:
 		print("Generating script three")
