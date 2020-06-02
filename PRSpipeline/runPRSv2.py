@@ -8,6 +8,9 @@
 #
 # To do list:
 # 1. Discuss with Lucia/Sarah why including indels could be problematic, update code accordignly
+# 2. Add --exclude-mhc option for SBayesR default True
+# 3. Add --hsq prior for SbayesR default None
+# 4. Add --seed optional flag for SbayesR default None
 #
 #
 # Update 02 Feb 2020 [AC]
@@ -62,6 +65,9 @@ class z():
 		self.runPRS=True
 		self.compileblocks=True
 		self.mergeCTandSB=True
+		self.SBRexcludeMHC=True
+		self.SBRhsq=None
+		self.SBRseed=None
 args=z()
 '''		
 
@@ -266,6 +272,10 @@ parser.add_argument('-runPRS', type=str2bool, default='True', action='store', he
 parser.add_argument('-compileblocks', type=str2bool, default='True', action='store', help="Compile PRS results across the whole genome ? ('True' or 'False'; generally only set to 'False' for testing)")
 parser.add_argument('-mergeCTandSB', type=str2bool, default='False', action='store', help="Compile SbayesR and Clumping+ Thresholding results in a final single file")
 
+#.. SBayes R optional changes
+parser.add_argument('SBRexcludeMHC',type=str2bool,,default='True', action='store',help="Exclude the MHC region from SBayes R, set to false to comapre with methods not excluding MHC region")
+parser.add_argument('SBRhsq',default=None, help="Optional SNP based heritability prior value")
+parser.add_argument('SBRseed',default=None, help="Optional seed for SBayesR, for debugging")
 
 parser._actions[0].help="Print this help message and exit"
 args = parser.parse_args()
@@ -282,6 +292,9 @@ RunPRSCalculation=args.runPRS
 CompilePRSBlocks=args.compileblocks
 MergeCTandSB=args.mergeCTandSB
 JobNamePrefix=args.jobname
+SBRexcludeMHC=args.SBRexcludeMHC
+SBRhsq=args.SBRhsq
+SBRseed=args.SBRseed
 
 #print("RunMetadataMatch='%s'; RunClumping='%s'; RunPRSCalculation='%s'; JobNamePrefix='%s'\n"%(RunMetadataMatch,RunClumping,RunPRSCalculation,JobNamePrefix))
 
@@ -823,6 +836,15 @@ if RunSBayesR:
 	scriptname="SBayesR/SUBMIT_SBayesR.PBS" 
 	#jobarray script for submission
 	eprint("Creating SBayesR job script (%s).\n"%(scriptname))
+	SBRexcludeMHCline=''
+	if SBRexcludeMHC:
+		SBRexcludeMHCline='--exclude-mhc'
+	SBRhsqline='--hsq %s'%(SBRhsq)
+	if SBRhsq is None:
+		SBRhsqline=''
+	SBRseedline='--seed %s'%(SBRseed)
+	if SBRseed is None:
+		SBRseedline=''
 	try:
 		currscript=open(scriptname, 'w')
 		currscript.write("%s\n"%(JobScriptHeader))
@@ -831,7 +853,7 @@ if RunSBayesR:
 		currscript.write("cd $PBS_O_WORKDIR\n")
 		currscript.write("chr=$PBS_ARRAY_INDEX\n")
 		currscript.write("module load gctb/2.0\n")
-		currscript.write("gctb --sbayes R \\\n--ldm /reference/genepi/public_reference_panels/ldm_ukb_50k_bigset_2.8M/ukb50k_shrunk_chr${chr}_mafpt01.ldm.sparse \\\n--pi 0.95,0.02,0.02,0.01 \\\n--gamma 0.0,0.01,0.1,1 \\\n--gwas-summary %s \\\n--chain-length 10000 \\\n--burn-in 2000 \\\n--out-freq 10 \\\n--out SBayesR/%s_chr${chr}_SBayesR.output\n"%(SBRsumstatsName,PRSname))
+		currscript.write("gctb --sbayes R \\\n--ldm /reference/genepi/public_reference_panels/ldm_ukb_50k_bigset_2.8M/ukb50k_shrunk_chr${chr}_mafpt01.ldm.sparse \\\n--pi 0.95,0.02,0.02,0.01 \\\n--gamma 0.0,0.01,0.1,1 \\\n--gwas-summary %s \\\n--chain-length 25000 \\\n--burn-in 5000 \\\n--out-freq 10 \\\n--out SBayesR/%s_chr${chr}_SBayesR.output %s %s %s\n"%(SBRsumstatsName,PRSname,SBRexcludeMHCline,SBRhsqline,SBRseedline))
 	except IOError:
 		eprint("Error : could not write file %s !\n"%(scriptname))
 		AnyErrors=True
