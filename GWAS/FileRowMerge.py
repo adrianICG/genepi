@@ -20,13 +20,17 @@ except ImportError:
     exit()
 	
 parser = argparse.ArgumentParser(description="Input is the extension of the files to be merged (rowbind). Files to be merged should be in the working directory. Accepts compressions such as gzip and txt etc.")
-parser.add_argument('-ext',help="Extension for compiling results, a wild card will be used before the extension",default='txt')
+parser.add_argument('-ext',help="Extension for compiling results, a wild card will be used before the extension",default=None)
 parser.add_argument('-wildcardAfter',help="Use also a wildcard after e.g. *.txt*",action = 'store_true')
 parser.add_argument('-sep',help="file delimiter ",default='\t')
 parser.add_argument('-output',help="merged file output ",default='./')
 
 parser._actions[0].help='Print this help message and exit'
 args = parser.parse_args()
+
+if args.ext is None:
+	print("A common extension for the files to be merged is required")
+	sys.exit()
 
 if not args.wildcardAfter:
 	dosageFiles=glob.glob('*%s'%(args.ext))
