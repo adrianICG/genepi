@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-#Update 25/03/20 
-#Allows release 10 adding of imputation covariates
 from sys import exit
 try:
     import pandas as pd
