@@ -196,24 +196,24 @@ else:
     covariates=[]
     qcovariates=[]
 orderedCols=['FID','IID']
-phenotype=[i for i in phenodf.columns if i not in covariates and i not in orderedCols and i not in qcovariates]
+phenotypes=[i for i in phenodf.columns if i not in covariates and i not in orderedCols and i not in qcovariates]
 if len(phenotype)>1:
-    print("Detected more than one phenotype, will use only:%s"%(phenotype[0]))
-phenotype=phenotype[0]
+    print("Detected more than one phenotype, will use All of them")
 
-tmpdf=phenodf[['FID','IID',phenotype]] # create phenotype file
+tmpdf=phenodf[['FID','IID']+[phenotypes]] # create phenotype file
 tmpdf=tmpdf.dropna()
-levels=set(tmpdf.loc[:,phenotype])
-if (len(levels) == 2):
-    binpheno=True
-    if 0 in levels and 1 in levels:
-        print ("the phenotype seems binary, it will be recoded to plink format (1 case 2 control)")
-        tmpdf.loc[:,phenotype]=tmpdf.loc[:,phenotype].map({1:2,0:1})
-if len(levels) < 2:
-    print ("there was only one level for the phenotype %s, this wont work, check the covdescript file"%(pheno))
-    tmpdf.drop(phenotype,axis=1)
-if (len(levels) > 2) and (0 in levels):
-    print("Note that 0 will be considered as missing as per plink specifications")
+for phenotype in phenotypes:
+	levels=set(tmpdf.loc[:,phenotype])
+	if (len(levels) == 2):
+		binpheno=True
+		if 0 in levels and 1 in levels:
+			print ("the phenotype seems binary, it will be recoded to plink format (1 case 2 control)")
+			tmpdf.loc[:,phenotype]=tmpdf.loc[:,phenotype].map({1:2,0:1})
+	if len(levels) < 2:
+		print ("there was only one level for the phenotype %s, this wont work will be dropped"%(phenotype))
+		tmpdf.drop(phenotype,axis=1)
+	if (len(levels) > 2) and (0 in levels):
+		print("Note that 0 will be considered as missing as per plink specifications")
 tmpdf.to_csv(jobName+'.pheno',index=False,sep="\t")
 
 if args.covdescript!="None":
@@ -302,7 +302,7 @@ for chrom in chrs: #for each chromosome that we have clumping results for
             #write PBS headers
             currscript.write("#PBS -N GWASchr%sB%s\n#PBS -r n\n#PBS -l mem=12GB,walltime=2:00:00\nmodule load plink/1.90b6.8\ncd $PBS_O_WORKDIR\n"%(chrom,numblock))
             #write plink dosage inputs
-            currscript.write("plink --dosage %s format=1 case-control-freqs --fam /reference/genepi/GWAS_release/Release10/Release10_HRCr1.1_GSA/PLINK_dosage/GWAS.fam --pheno %s.pheno %s %s %s %s --out GWAS_out/%s_sumstats_chr%s_block%s --memory 8000 --threads 1"%(block,jobName,covarFileLine,removeLine,excludeLine,keepLine,jobName,chrom,numblock))
+            currscript.write("plink --dosage %s format=1 case-control-freqs --fam /reference/genepi/GWAS_release/Release10/Release10_HRCr1.1_GSA/PLINK_dosage/GWAS.fam --pheno %s.pheno --all-pheno %s %s %s %s --out GWAS_out/%s_sumstats_chr%s_block%s --memory 8000 --threads 1"%(block,jobName,covarFileLine,removeLine,excludeLine,keepLine,jobName,chrom,numblock))
         
 # Submit them all for parallel computing
 
