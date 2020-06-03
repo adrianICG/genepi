@@ -333,144 +333,146 @@ else:
 print("Change to main working directory")
 os.chdir(normalwd)
 
-os.chdir('GWAS_calc/GWAS_out')
-dosageFiles=glob.glob('*.dosage')
+
+for phenotype in phenotypes:
+	os.chdir('GWAS_calc/GWAS_out')
+	dosageFiles=glob.glob('*.dosage')
 
 
-print("Compiling dosage results this may take a while %s"%(datetime.datetime.now()))
-finalDF=pd.concat((pd.read_csv(f,header=0,index_col='SNP',sep='\s+') for f in dosageFiles))
-print("Finished compiling dosage at %s"%(datetime.datetime.now()))
+	print("Compiling dosage results this may take a while %s"%(datetime.datetime.now()))
+	finalDF=pd.concat((pd.read_csv(f,header=0,index_col='SNP',sep='\s+') for f in dosageFiles))
+	print("Finished compiling dosage at %s"%(datetime.datetime.now()))
 
 
-print("Matching meta data (rsNumber and imputation status) %s"%(datetime.datetime.now()))
-meta_data=pd.read_table('/reference/genepi/GWAS_release/Release10/Release10_HRCr1.1_GSA/info/Metadata_allchr.txt',usecols=['Marker','Marker_dbSNP_1','Genotyped'],sep="\s+")
-meta_data.index=meta_data.Marker
-meta_data['Genotyped']=meta_data.Genotyped=='1'
-meta_data.Genotyped=meta_data.Genotyped*1
-finalDF['SNPrs']=meta_data.loc[finalDF.index,'Marker_dbSNP_1']
-finalDF['ngt']=meta_data.loc[finalDF.index,'Genotyped']
-finalDF['CHR']=[int(re.split(":",i)[0]) for i in finalDF.index]
-finalDF['BP']=[int(re.split(":",i)[1]) for i in finalDF.index]
+	print("Matching meta data (rsNumber and imputation status) %s"%(datetime.datetime.now()))
+	meta_data=pd.read_table('/reference/genepi/GWAS_release/Release10/Release10_HRCr1.1_GSA/info/Metadata_allchr.txt',usecols=['Marker','Marker_dbSNP_1','Genotyped'],sep="\s+")
+	meta_data.index=meta_data.Marker
+	meta_data['Genotyped']=meta_data.Genotyped=='1'
+	meta_data.Genotyped=meta_data.Genotyped*1
+	finalDF['SNPrs']=meta_data.loc[finalDF.index,'Marker_dbSNP_1']
+	finalDF['ngt']=meta_data.loc[finalDF.index,'Genotyped']
+	finalDF['CHR']=[int(re.split(":",i)[0]) for i in finalDF.index]
+	finalDF['BP']=[int(re.split(":",i)[1]) for i in finalDF.index]
 
-if binpheno:
-    print("Obtaining number of cases and controls")
-    logFile=dosageFiles[0].replace('.assoc.dosage','.log')
-    with open(logFile,'r') as logf:
-        for line in logf:
-            if re.match('Among remaining phenotypes,',line):
-                numbers=re.findall(r'\d+', line)
-                cases=numbers[0]
-                controls=numbers[1]
-                cases=int(cases)
-                controls=int(controls)
-                break
-    newNames={'FRQ_A':'FRQ_A_'+str(cases),'FRQ_U':'FRQ_U_'+str(controls)}
-else:
-    newNames={}
-    cases=1
-    controls=1
+	if binpheno:
+		print("Obtaining number of cases and controls")
+		logFile=dosageFiles[0].replace('.assoc.dosage','.log')
+		with open(logFile,'r') as logf:
+			for line in logf:
+				if re.match('Among remaining phenotypes,',line):
+					numbers=re.findall(r'\d+', line)
+					cases=numbers[0]
+					controls=numbers[1]
+					cases=int(cases)
+					controls=int(controls)
+					break
+		newNames={'FRQ_A':'FRQ_A_'+str(cases),'FRQ_U':'FRQ_U_'+str(controls)}
+	else:
+		newNames={}
+		cases=1
+		controls=1
 
-finalDF.columns=[newNames.get(i,i) for i in finalDF.columns]
-print("Saving the compiled results to %s" %(normalwd))
-os.chdir(normalwd)
-finalDF.to_csv('%s_GWASsumstats.dat'%(jobName),sep='\t',na_rep='NA')
+	finalDF.columns=[newNames.get(i,i) for i in finalDF.columns]
+	print("Saving the compiled results to %s" %(normalwd))
+	os.chdir(normalwd)
+	finalDF.to_csv('%s_%s_GWASsumstats.dat'%(jobName,phenotype),sep='\t',na_rep='NA')
 
-## QC steps 
+	## QC steps 
 
-#AF 
-if binpheno:
-    AF=(finalDF['FRQ_A_'+str(cases)]*cases+finalDF['FRQ_U_'+str(controls)]*controls)/(cases+controls)
-else:
-    AF=(finalDF['FRQ_A']*cases+finalDF['FRQ_U']*controls)/(cases+controls)
-    
-print('QC step removing sumstats with MAF < %s'%(args.PerformQCMAF))
-finalDF=finalDF.loc[(AF>args.PerformQCMAF) & (AF<(1-args.PerformQCMAF)),:]
+	#AF 
+	if binpheno:
+		AF=(finalDF['FRQ_A_'+str(cases)]*cases+finalDF['FRQ_U_'+str(controls)]*controls)/(cases+controls)
+	else:
+		AF=(finalDF['FRQ_A']*cases+finalDF['FRQ_U']*controls)/(cases+controls)
+		
+	print('QC step removing sumstats with MAF < %s'%(args.PerformQCMAF))
+	finalDF=finalDF.loc[(AF>args.PerformQCMAF) & (AF<(1-args.PerformQCMAF)),:]
 
-#Info
-print('QC step removing sumstats with info < %s'%(args.infoS))
-finalDF=finalDF.loc[finalDF.INFO>=args.infoS,:]
-finalDF.to_csv('%s_GWASsumstats_QCed.dat'%(jobName),sep='\t',na_rep='NA')
+	#Info
+	print('QC step removing sumstats with info < %s'%(args.infoS))
+	finalDF=finalDF.loc[finalDF.INFO>=args.infoS,:]
+	finalDF.to_csv('%s_%s_GWASsumstats_QCed.dat'%(jobName,phenotype),sep='\t',na_rep='NA')
 
-if args.Plot:
-## qqplot based on script provided by Enda Byrne
-    finalDF.dropna(inplace=True)
-    print('Now plotting qqplot and manhattan plot')
-    z=norm.ppf(finalDF['P']/2)
-    lambGC = round(np.median(z**2)/chi2.ppf(0.5,df=1),3)
-    p = 2*norm.cdf(-abs(z))
-    p.sort()
-    expected = list(range(len(p)))
-    lobs = np.array(-np.log10(p))
-    lexp = np.array(-np.log10(np.array(expected) / (len(expected)+1)))
-    # plots all points with p < 0.05
-    fig,ax = plt.subplots(1)
-    p_sig = [i for i in p if i<0.05]
-    ax.plot(lexp, lobs, 'd', color='steelblue',alpha=0.75,label='Observed')
-    xmin,xmax=ax.get_xlim()
-    ax.plot([0,xmax+0.2], [0,xmax+0.2],linestyle='dashed', color='black',label='expected')
-    ax.set_xlim(xmin,xmax)
-    ax.set_xlabel('-log10(expected P)')
-    ax.set_ylabel('-log10(observed P)')
-    ax.text(0.2,6,'lambda = %s'%(str(lambGC)))
-    fig.savefig('%s_QCed.qqplot.png'%(jobName))
-    
-## Manhattan plot
-    GWAsumstats1=finalDF
-    GWAsumstats1.sort_values(by=['CHR','BP'],inplace=True)
-    # calculate new positions for plot:
-    dftmp=GWAsumstats1
-    dftmp=dftmp.loc[:,['SNPrs','CHR','BP']]
-    dftmp['SNP']=dftmp.index
-    dftmp.drop_duplicates(inplace=True)
+	if args.Plot:
+	## qqplot based on script provided by Enda Byrne
+		finalDF.dropna(inplace=True)
+		print('Now plotting qqplot and manhattan plot')
+		z=norm.ppf(finalDF['P']/2)
+		lambGC = round(np.median(z**2)/chi2.ppf(0.5,df=1),3)
+		p = 2*norm.cdf(-abs(z))
+		p.sort()
+		expected = list(range(len(p)))
+		lobs = np.array(-np.log10(p))
+		lexp = np.array(-np.log10(np.array(expected) / (len(expected)+1)))
+		# plots all points with p < 0.05
+		fig,ax = plt.subplots(1)
+		p_sig = [i for i in p if i<0.05]
+		ax.plot(lexp, lobs, 'd', color='steelblue',alpha=0.75,label='Observed')
+		xmin,xmax=ax.get_xlim()
+		ax.plot([0,xmax+0.2], [0,xmax+0.2],linestyle='dashed', color='black',label='expected')
+		ax.set_xlim(xmin,xmax)
+		ax.set_xlabel('-log10(expected P)')
+		ax.set_ylabel('-log10(observed P)')
+		ax.text(0.2,6,'lambda = %s'%(str(lambGC)))
+		fig.savefig('%s_%s_QCed.qqplot.png'%(jobName,phenotype))
+		
+	## Manhattan plot
+		GWAsumstats1=finalDF
+		GWAsumstats1.sort_values(by=['CHR','BP'],inplace=True)
+		# calculate new positions for plot:
+		dftmp=GWAsumstats1
+		dftmp=dftmp.loc[:,['SNPrs','CHR','BP']]
+		dftmp['SNP']=dftmp.index
+		dftmp.drop_duplicates(inplace=True)
 
-    if sum(dftmp.SNPrs.duplicated()):
-        print("There are duplicated variants in sumstats with different positions. One will randomly be removed")
-        dftmp=dftmp.loc[~dftmp.SNPrs.duplicated(),:]
+		if sum(dftmp.SNPrs.duplicated()):
+			print("There are duplicated variants in sumstats with different positions. One will randomly be removed")
+			dftmp=dftmp.loc[~dftmp.SNPrs.duplicated(),:]
 
-    pastlen=len(dftmp)
-    dftmp.dropna(inplace=True)
-    GWAsumstats1.dropna(inplace=True)
-    if len(dftmp)!=pastlen:
-        print("There were NAs in the sumstats, they were removed automatically but you might want to double check")
+		pastlen=len(dftmp)
+		dftmp.dropna(inplace=True)
+		GWAsumstats1.dropna(inplace=True)
+		if len(dftmp)!=pastlen:
+			print("There were NAs in the sumstats, they were removed automatically but you might want to double check")
 
-    chrs=set(args.chromosomes) #make sure its sorted
-    pastChr=chrs.pop()
-    maxBP=max(dftmp.loc[dftmp.CHR==pastChr,'BP'])
-    for chrom in chrs:
-        tmpBP=dftmp.loc[dftmp.CHR==chrom,'BP']
-        tmpBP=tmpBP+maxBP
-        dftmp.loc[tmpBP.index,'BP']=tmpBP
-        maxBP=max(dftmp.loc[dftmp.CHR==chrom,'BP'])
+		chrs=set(args.chromosomes) #make sure its sorted
+		pastChr=chrs.pop()
+		maxBP=max(dftmp.loc[dftmp.CHR==pastChr,'BP'])
+		for chrom in chrs:
+			tmpBP=dftmp.loc[dftmp.CHR==chrom,'BP']
+			tmpBP=tmpBP+maxBP
+			dftmp.loc[tmpBP.index,'BP']=tmpBP
+			maxBP=max(dftmp.loc[dftmp.CHR==chrom,'BP'])
 
-    dftmp.set_index(dftmp.SNPrs,inplace=True)
+		dftmp.set_index(dftmp.SNPrs,inplace=True)
 
 
-    ##Plot
-    fig = plt.figure() 
-    topAx=fig.add_subplot(111)
-    fig.set_size_inches(25,10)
-    #Manhattan 1
-    colors1=['#a92e4a' if i%2 else '#782135' for i in GWAsumstats1.CHR.values]
-    topAx.scatter(dftmp.loc[GWAsumstats1.SNPrs,'BP'],-np.log10(GWAsumstats1.P),c=colors1,s=30,rasterized=True,alpha=0.75)
-    sns.despine(ax=topAx)# removes top and right lines
-    chrs=set(dftmp.CHR) #To make xticks
-    medians=[] #postions
-    labels=[] #labels
-    for chrom in chrs:
-        medians.append(np.median(dftmp.loc[dftmp.CHR==chrom,'BP']))
-        labels.append(str(chrom))
-    #Manhattan 2
-    topAx.set_xticks(medians) #add xticklabels
-    topAx.set_xticklabels(labels,fontsize=15)
-    topAx.set_ylabel('-log10(pvalue)',fontsize=30)
-    topAx.set_title(jobName,fontsize=15)
-    topAx.axhline(y=-np.log10(5e-8),color='red')
-    topAx.axhline(y=-np.log10(1e-5),linestyle='--',color='blue')
+		##Plot
+		fig = plt.figure() 
+		topAx=fig.add_subplot(111)
+		fig.set_size_inches(25,10)
+		#Manhattan 1
+		colors1=['#a92e4a' if i%2 else '#782135' for i in GWAsumstats1.CHR.values]
+		topAx.scatter(dftmp.loc[GWAsumstats1.SNPrs,'BP'],-np.log10(GWAsumstats1.P),c=colors1,s=30,rasterized=True,alpha=0.75)
+		sns.despine(ax=topAx)# removes top and right lines
+		chrs=set(dftmp.CHR) #To make xticks
+		medians=[] #postions
+		labels=[] #labels
+		for chrom in chrs:
+			medians.append(np.median(dftmp.loc[dftmp.CHR==chrom,'BP']))
+			labels.append(str(chrom))
+		#Manhattan 2
+		topAx.set_xticks(medians) #add xticklabels
+		topAx.set_xticklabels(labels,fontsize=15)
+		topAx.set_ylabel('-log10(pvalue)',fontsize=30)
+		topAx.set_title(jobName,fontsize=15)
+		topAx.axhline(y=-np.log10(5e-8),color='red')
+		topAx.axhline(y=-np.log10(1e-5),linestyle='--',color='blue')
 
-    fig.tight_layout()
-    fig.savefig('%s_QCed.manhattan.png'%(jobName))
-    
-    
+		fig.tight_layout()
+		fig.savefig('%s_%s_QCed.manhattan.png'%(jobName,phenotype))
+		
+		
     
 print("Finished running %s"%(datetime.datetime.now()))
 
