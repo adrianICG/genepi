@@ -39,6 +39,6 @@ print("Compiling results this may take a while %s"%(datetime.datetime.now()))
 finalDF=pd.concat((pd.read_csv(f,header=0,sep=args.sep,compression='infer') for f in dosageFiles))
 print("Finished compiling at %s"%(datetime.datetime.now()))
 
-finalDF.to_csv('%s.merged'%(args.output),sep=args.sep,na_rep='NA')
+finalDF.to_csv('%s.merged'%(args.output),sep=args.sep,na_rep='NA',index=False)
 
 
