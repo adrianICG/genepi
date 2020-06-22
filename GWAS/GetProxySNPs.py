@@ -26,7 +26,7 @@ SNPlist=[]
 with open(args.SNPlist,'r') as infile:
 	for line in infile:
 		SNPlist.append(line.strip())
-
+SNPlist=list(set(SNPlist))
 print("Read %s SNPs from input file"%(len(SNPlist)))
 
 with open(args.output,'w') as outfile:
