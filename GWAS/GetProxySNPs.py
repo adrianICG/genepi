@@ -2,6 +2,16 @@
 
 import argparse
 import re
+import requests
+
+'''
+class z():
+	def __init__(self):
+		self.SNPlist='snpListTest'
+		self.Nproxies=3
+		self.output='test'
+args=z()
+'''
 
 parser = argparse.ArgumentParser(description="input a list of SNPs")
 parser.add_argument('SNPlist',help="Input meta analysis file default columns")
@@ -17,7 +27,7 @@ with open(args.SNPlist,'r') as infile:
 	for line in infile:
 		SNPlist.append(line.strip())
 
-print("Read %s SNPs from meta analysis file"%(len(SNPlist)))
+print("Read %s SNPs from input file"%(len(SNPlist)))
 
 with open(args.output,'w') as outfile:
 	for SNP in SNPlist:
@@ -26,9 +36,10 @@ with open(args.output,'w') as outfile:
 		if re.search("error",lines[0]):
 			print("Could not find SNP %s"%(SNP))
 			continue
-		for i in range(args.Nproxies):
+		for i in range(args.Nproxies+1):
 			try:
-				outfile.write(lines[i+1])
+				currProxy=lines[i+1].split('\t')[0]
+				outfile.write("%s\n"%(currProxy))
 			except IndexError:
 				print("SNP %s had less than %s proxy SNPs"%(SNP,args.Nproxies))
 				
