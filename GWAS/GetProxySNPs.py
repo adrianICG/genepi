@@ -12,6 +12,7 @@ class z():
 		self.token=None
 		self.Nproxies=3
 		self.output='listFor23andMe.txt'
+		self.pop='CEU'
 args=z()
 '''
 
@@ -19,6 +20,7 @@ parser = argparse.ArgumentParser(description="input a list of SNPs and the LDlin
 parser.add_argument('SNPlist',help="Input meta analysis file default columns")
 parser.add_argument('-token',help="LD link token, pelase request one at https://ldlink.nci.nih.gov/?tab=apiaccess",default=None)
 parser.add_argument('-Nproxies',help="number of proxies per SNP",default=3,type=int)
+parser.add_argument('-pop',help="population",default='CEU',type=str)
 parser.add_argument('-o','--output',help="output name ",default='proxyList')
 
 parser._actions[0].help="Print this help message and exit"
@@ -39,7 +41,7 @@ print("Read %s SNPs from input file"%(len(SNPlist)))
 with open(args.output,'w') as outfile:
 	for SNP in SNPlist:
 		print("Requesting proxies for %s"%(SNP))
-		r= requests.get('https://ldlink.nci.nih.gov/LDlinkRest/ldproxy?var=%s&pop=CEU&r2_d=r2&token=%s'%(SNP,args.token))
+		r= requests.get('https://ldlink.nci.nih.gov/LDlinkRest/ldproxy?var=%s&pop=%s&r2_d=r2&token=%s'%(SNP,args.pop,args.token))
 		currtext=r.text
 		lines=currtext.split('\n')
 		currProxy=SNP
