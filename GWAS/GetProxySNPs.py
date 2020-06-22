@@ -40,10 +40,11 @@ with open(args.output,'w') as outfile:
 	for SNP in SNPlist:
 		print("Requesting proxies for %s"%(SNP))
 		r= requests.get('https://ldlink.nci.nih.gov/LDlinkRest/ldproxy?var=%s&pop=CEU&r2_d=r2&token=%s'%(SNP,args.token))
-		lines=r.text.split('\n')
+		currtext=r.text
+		lines=currtext.split('\n')
 		currProxy=SNP
 		outfile.write("%s\n"%(currProxy))
-		if re.search("error",lines[0]):
+		if re.search("error",currtext):
 			print("Could not find SNP %s"%(SNP))
 			continue
 		i=0
