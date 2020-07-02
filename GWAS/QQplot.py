@@ -138,7 +138,6 @@ for col in GWAsumstats1.columns:
 
 print("Read %s snps from the summary statistics"%(len(GWAsumstats1.index)))		
 GWAsumstats1.sort_values(by='pval',inplace=True)
-GWAsumstats1=GWAsumstats1.loc[GWAsumstats1.CHR<23,:]
 
 ##Plot
 
