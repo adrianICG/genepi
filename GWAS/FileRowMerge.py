@@ -20,7 +20,7 @@ except ImportError:
 parser = argparse.ArgumentParser(description="Input is the extension of the files to be merged (rowbind). Files to be merged should be in the working directory. Accepts compressions such as gzip and txt etc. NOTE this program will require enough memory to load all of your files")
 parser.add_argument('-ext',help="Extension for compiling results, a wild card will be used before the extension",default=None)
 parser.add_argument('-wildcardAfter',help="Use also a wildcard after e.g. *.txt*",action = 'store_true')
-parser.add_argument('-sep',help="file delimiter ",default='\t')
+parser.add_argument('-sep',help="file delimiter default is any combination of white characters",default='\s+')
 parser.add_argument('-output',help="merged file output ",default='./')
 
 parser._actions[0].help='Print this help message and exit'
