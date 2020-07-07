@@ -176,7 +176,7 @@ if not args.circular:
 	labels=[] #labels
 	for chr in chrs:
 		medians.append(np.median(dftmp.loc[dftmp.CHR==chr,'BP']))
-		labels.append(str(chr))
+		labels.append(str(int(chr)))
 	#Manhattan 2
 	topAx.set_xticks(medians) #add xticklabels
 	topAx.set_xticklabels(labels,fontsize=15)
