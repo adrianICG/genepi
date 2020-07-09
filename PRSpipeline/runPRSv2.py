@@ -809,8 +809,8 @@ if sum(GWAsumstats['CHR']=='x') or sum(GWAsumstats['CHR']=='X') or sum(GWAsumsta
 	eprint("%s variants remaining in sumstats after X chr removal"%(len(GWAsumstats.index)))
 
 # Convert CHR and BP o int to remove 0s
-GWAsumstats['CHR']=pd.to_numeric(GWAsumstats.CHR,errors='coerce').astype(pd.Int64Dtype())
-GWAsumstats['BP']=pd.to_numeric(GWAsumstats.BP,errors='coerce').astype(pd.Int64Dtype())
+GWAsumstats['CHR']=pd.to_numeric(GWAsumstats.CHR,errors='coerce').astype(pd.Int64Dtype()).astype(str)
+GWAsumstats['BP']=pd.to_numeric(GWAsumstats.BP,errors='coerce').astype(pd.Int64Dtype()).astype(str)
 
 
 GWAsumstats['SNPvariant']=GWAsumstats['CHR'].apply(str)+':'+GWAsumstats['BP'].apply(str)
