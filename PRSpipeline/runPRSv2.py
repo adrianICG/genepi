@@ -796,7 +796,6 @@ naMarkers=['NA','NAN','na','nan']
 naMarkers.extend(args.NAmarker)
 GWAsumstats = pd.read_csv(inputGWAS,header=0,index_col=None,usecols=ColsToUse,sep="\s+",dtype=dtypes,na_values=naMarkers,compression='infer')   
 GWAsumstats.columns=[colConverter[i] for i in GWAsumstats.columns]
-GWAsumstats['SNPvariant']=GWAsumstats['CHR'].apply(str)+':'+GWAsumstats['BP'].apply(str)
 for col in GWAsumstats.columns:
 	if col in numericCols:
 		GWAsumstats.loc[:,col]=pd.to_numeric(GWAsumstats.loc[:,col],errors='coerce')
@@ -808,6 +807,13 @@ if sum(GWAsumstats['CHR']=='x') or sum(GWAsumstats['CHR']=='X') or sum(GWAsumsta
 	GWAsumstats=GWAsumstats.loc[GWAsumstats['CHR'].str.lower()!='x']
 	GWAsumstats=GWAsumstats.loc[GWAsumstats['CHR']!='23']
 	eprint("%s variants remaining in sumstats after X chr removal"%(len(GWAsumstats.index)))
+
+# Convert CHR and BP o int to remove 0s
+GWAsumstats['CHR']=GWAsumstats.CHR.astype(pd.Int64Dtype())
+GWAsumstats['BP']=GWAsumstats.BP.astype(pd.Int64Dtype())
+
+
+GWAsumstats['SNPvariant']=GWAsumstats['CHR'].apply(str)+':'+GWAsumstats['BP'].apply(str)
 
 if transformEff:
 	if sum(GWAsumstats['beta']<0):
