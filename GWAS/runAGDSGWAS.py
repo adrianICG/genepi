@@ -303,7 +303,7 @@ for chrom in chrs: #for each chromosome that we have clumping results for
             #write PBS headers
             currscript.write("#PBS -N GWASchr%sB%s\n#PBS -r n\n#PBS -l mem=12GB,walltime=2:00:00\nmodule load plink/1.90b6.8\ncd $PBS_O_WORKDIR\n"%(chrom,numblock))
             #write plink dosage inputs
-            currscript.write("plink --dosage %s format=1 case-control-freqs --fam /reference/genepi/GWAS_release/Release10/Release10_HRCr1.1_GSA/PLINK_dosage/GWAS.fam --pheno %s.pheno --all-pheno %s %s %s %s --out GWAS_out/%s_sumstats_chr%s_block%s --memory 8000 --threads 1"%(block,jobName,covarFileLine,removeLine,excludeLine,keepLine,jobName,chrom,numblock))
+            currscript.write("plink --dosage %s format=1 case-control-freqs --fam /reference/genepi/GWAS_release/Release10/Release10_HRCr1.1_GSA/PLINK_dosage/GWAS.fam --pheno %s.pheno %s %s %s %s --out GWAS_out/%s_sumstats_chr%s_block%s --memory 8000 --threads 1"%(block,jobName,covarFileLine,removeLine,excludeLine,keepLine,jobName,chrom,numblock))
         
 # Submit them all for parallel computing
 
