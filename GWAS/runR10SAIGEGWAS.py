@@ -49,11 +49,11 @@ print("AGDS_saige_GWAS script started running at %s"%(datetime.datetime.now()))
 '''
 class z():
      def __init__(self):
-         self.jobname='suiatt'
-         self.phenofile='SuiattAll.pheno'
-         self.covdescript='covdescript'
-         self.DoNotSubmit='False'
-         self.NUMBERofPCs=0
+         self.jobname='test'
+         self.phenofile='QIMR_teenacnewithmild.dat'
+         self.covdescript='None'
+         self.DoNotSubmit='True'
+         self.NUMBERofPCs=10
          self.minMAF=0.01
          self.LOCO='FALSE'
          self.IsOutputAFinCaseCtrl='FALSE'
@@ -233,7 +233,7 @@ with open('Step1%s.PBS1'%(jobName), 'w') as currscript:
     currscript.write(shebang+'\n') #write shebang
     #write PBS headers
     currscript.write("#PBS -N SAIGEstep1\n#PBS -r n\n#PBS -l mem=40GB,walltime=30:00:00,ncpus=5\nmodule load miniconda3/current\nsource activate RSAIGE\ncd $PBS_O_WORKDIR\n")
-    currscript.write("R -e \"library(SAIGE);fitNULLGLMM(plinkFile='%s',phenoFile='%s',phenoCol = '%s',%s,%s,sampleIDColinphenoFile='IID',outputPrefix = 'SAIGE_Step1_%s', nThreads = 5)\""%(plinkFileLine,jobName+'.pheno',phenotype,traitTypeLine,covarColLine,jobName))
+    currscript.write("R -e \"library(SAIGE);;fitNULLGLMM(plinkFile='%s',phenoFile='%s',phenoCol = '%s',%s,%s,sampleIDColinphenoFile='IID',outputPrefix = 'SAIGE_Step1_%s', nThreads = 5)\""%(plinkFileLine,jobName+'.pheno',phenotype,traitTypeLine,covarColLine,jobName))
 # Submit step1
 
 if args.DoNotSubmit==True:
@@ -264,11 +264,11 @@ else:
 print("Creating the STEP2 submission script")
 for chrom in chrs: #for each chromosome that we have clumping results for
     #obtain all blocknames
-    blockNames=[i for i in glob.glob('/reference/genepi/GWAS_release/Release10/Release10_HRCr1.1/VCF/BlockVCF_chr%s.*.gz'%(chrom)) if not re.search('poly',i)]
+    blockNames=glob.glob('/reference/genepi/GWAS_release/Release10/Release10_HRCr1.1/VCF/BlockVCF_chr%s.*_poly.dose.vcf.gz'%(chrom))
     for block in blockNames: #for each block
         numblock=str(re.search('BlockVCF_chr\d+.(\d+).dose.vcf.gz',block).group(1)) #obtain current block number
         #open the file, the with closes it even if there are problems
-        vcfFile='/reference/genepi/GWAS_release/Release10/Release10_HRCr1.1/VCF/BlockVCF_chr%s.%s.dose.vcf.gz'%(chrom,numblock)
+        vcfFile=block
         vcfTbix=vcfFile+'.tbi'
         sampleFile='/reference/genepi/GWAS_release/Release10/Release10_HRCr1.1/VCF/VCF_chr%s_VCFIDsequence.txt'%(chrom)
         GMMATmodelFile='SAIGE_Step1_%s.rda'%(jobName)
@@ -310,6 +310,8 @@ dosageFiles=glob.glob('*.saige')
 print("Compiling dosage results this may take a while %s"%(datetime.datetime.now()))
 finalDF=pd.concat((pd.read_csv(f,header=0,index_col='SNPID',sep='\s+') for f in dosageFiles))
 print("Finished compiling dosage at %s"%(datetime.datetime.now()))
+
+finalDF.to_csv('%s_GWASsumstats_raw.dat'%(jobName),sep='\t',na_rep='NA')
 
 
 print("Matching meta data (rsNumber and imputation status) %s"%(datetime.datetime.now()))

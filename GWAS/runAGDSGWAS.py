@@ -197,7 +197,7 @@ else:
     qcovariates=[]
 orderedCols=['FID','IID']
 phenotypes=[i for i in phenodf.columns if i not in covariates and i not in orderedCols and i not in qcovariates]
-if len(phenotype)>1:
+if len(phenotypes)>1:
     print("Detected more than one phenotype, will use All of them")
 
 tmpdf=phenodf[['FID','IID']+[phenotypes]] # create phenotype file
