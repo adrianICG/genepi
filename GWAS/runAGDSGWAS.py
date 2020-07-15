@@ -61,9 +61,9 @@ class z():
      def __init__(self):
          self.chromosomes=list(range(1,23))
          self.Keep=None
-         self.jobname='testint'
-         self.phenofile='TASI_noBSB.tsv'
-         self.covdescript='covdescript'
+         self.jobname='test'
+         self.phenofile='QIMR_teenacnewithmild.dat'
+         self.covdescript='None'
          self.log=None
          self.DoNotSubmit=True
          self.DealDuplicates=None
@@ -75,6 +75,7 @@ class z():
          self.Plot=True
          self.NUMBERofPCs=10
 args=z()
+
 
 '''
 
@@ -200,7 +201,7 @@ phenotypes=[i for i in phenodf.columns if i not in covariates and i not in order
 if len(phenotypes)>1:
     print("Detected more than one phenotype, will use All of them")
 
-tmpdf=phenodf[['FID','IID']+[phenotypes]] # create phenotype file
+tmpdf=phenodf[['FID','IID']+phenotypes] # create phenotype file
 tmpdf=tmpdf.dropna()
 for phenotype in phenotypes:
     levels=set(tmpdf.loc[:,phenotype])
