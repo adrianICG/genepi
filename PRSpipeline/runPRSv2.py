@@ -923,7 +923,7 @@ if len(SBayesRFiles)>0:
 	SBayesROutDF=pd.concat((pd.read_csv(f,header=0,sep='\s+',usecols=['Name','A1','A1Effect']) for f in SBayesRFiles))
 	SBayesROutDF.columns=['Marker','sbrA1','sbrBETA']
 	eprint("Finished compiling SBayesR at %s"%(datetime.datetime.now()))
-	GWAsumstats=pd.merge(GWAsumstats,SBayesROutDF,on='Marker')
+	GWAsumstats=pd.merge(GWAsumstats,SBayesROutDF,on='Marker',how='outer')
 else:
 	eprint("SBayesR was not run in this nor in a previous run of this program. No SBayesR based scoring will occur. (If you wanted SBayesR rerun  using -runSBayesR flag)")
 	MergeCTandSB=False
