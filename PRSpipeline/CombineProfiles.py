@@ -45,5 +45,5 @@ for f in scoreFiles:
 	PRSDF=PRSDF+tmpDF
 print("Finished compiling at %s"%(datetime.datetime.now()))
 
-finalDF.to_csv('%s.sumscores'%(args.output),sep=args.sep,na_rep='NA',index=False)
+PRSDF.to_csv('%s.sumscores'%(args.output),sep=args.sep,na_rep='NA',index=False)
 
