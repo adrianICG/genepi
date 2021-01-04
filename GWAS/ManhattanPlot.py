@@ -31,8 +31,8 @@ parser = argparse.ArgumentParser(description="input summary statistics, should c
 parser.add_argument('input1',help="Input file gwa sumstats 1")
 parser.add_argument('-highlight',help="Clumped file with the loci to highlight, should be standard plink clumping output  < 5e-8 will be filtered out; with same index (SNP column) as the original Manhattan plot",default=None)
 parser.add_argument('-title1','--T1',help="title for plot of gwa sumstats",default="")
-parser.add_argument('-color1','--C1',help="Color1 ",default='#999795')
-parser.add_argument('-color2','--C2',help="Color2 ",default='#a92e4a')
+parser.add_argument('-color1','--C1',help="Color1 ",default='#808080')
+parser.add_argument('-color2','--C2',help="Color2 ",default='#000000')
 parser.add_argument('-sep',help="file delimiter ",default='\s+')
 parser.add_argument('-circular',help="Experimental plot ciruclar manhattan plot",action='store_true')
 parser.add_argument('-o','--output',help="output name without extension",default='Manhattan')
@@ -170,12 +170,13 @@ if not args.circular:
 	#colors1=['#424242' if i%2 else '#a8a7a5' for i in GWAsumstats1.CHR.values] #SCZ colors
 	colors1=[args.C1 if i%2 else args.C2 for i in GWAsumstats1.CHR.values] #BIP colors
 	if args.highlight != None:
+		clumpedFile=args.highlight
 		GWASclumped=pd.read_csv(clumpedFile,sep='\s+',index_col='SNP',compression='infer')
 		listSigSNPs=[dicVartoRs.get(re.sub("\(\d\)","",j),None) for i in GWASclumped.SP2[GWASclumped.P<=5e-8] for j in re.split(",",i)]
 		listNoNSigSNPs=GWAsumstats1.index[~GWAsumstats1.index.isin(listSigSNPs)]
 		topAx.scatter(dftmp.loc[listNoNSigSNPs,'BP'],-np.log10(GWAsumstats1.loc[listNoNSigSNPs,'pval']),c=colors1,s=30,rasterized=True)
-		topAx.scatter(dftmp.loc[listSigSNPs,'BP'],-np.log10(GWAsumstats1.loc[listSigSNPs,'pval']),c='salmon',s=31,rasterized=True)
-		topAx.scatter(dftmp.loc[GWASclumped.index[GWASclumped.P<=5e-8],'BP'],-np.log10(GWAsumstats1.loc[GWASclumped.index[GWASclumped.P<=5e-8],'pval']),marker='d',c='green',s=40,rasterized=True)
+		topAx.scatter(dftmp.loc[listSigSNPs,'BP'],-np.log10(GWAsumstats1.loc[listSigSNPs,'pval']),c='#b50404',s=30,rasterized=True)
+		topAx.scatter(dftmp.loc[GWASclumped.index[GWASclumped.P<=5e-8],'BP'],-np.log10(GWAsumstats1.loc[GWASclumped.index[GWASclumped.P<=5e-8],'pval']),marker='d',c='green',s=50,rasterized=True)
 	else:
 		topAx.scatter(dftmp.loc[GWAsumstats1.SNPrs,'BP'],-np.log10(GWAsumstats1.pval),c=colors1,s=30,rasterized=True)
 	sns.despine(ax=topAx)# removes top and right lines
