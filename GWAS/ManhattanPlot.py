@@ -172,7 +172,7 @@ if not args.circular:
 	if args.highlight != None:
 		clumpedFile=args.highlight
 		GWASclumped=pd.read_csv(clumpedFile,sep='\s+',index_col='SNP',compression='infer')
-		listSigSNPs=[dicVartoRs.get(re.sub("\(\d\)","",j),None) for i in GWASclumped.SP2[GWASclumped.P<=5e-8] for j in re.split(",",i)]
+		listSigSNPs=[re.sub("\(\d\)","",j) for i in GWASclumped.SP2[GWASclumped.P<=5e-8] for j in re.split(",",i)]
 		listNoNSigSNPs=GWAsumstats1.index[~GWAsumstats1.index.isin(listSigSNPs)]
 		topAx.scatter(dftmp.loc[listNoNSigSNPs,'BP'],-np.log10(GWAsumstats1.loc[listNoNSigSNPs,'pval']),c=colors1,s=30,rasterized=True)
 		topAx.scatter(dftmp.loc[listSigSNPs,'BP'],-np.log10(GWAsumstats1.loc[listSigSNPs,'pval']),c='#b50404',s=30,rasterized=True)
