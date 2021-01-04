@@ -29,6 +29,7 @@ except ImportError:
 ####################Arg parsing #########################
 parser = argparse.ArgumentParser(description="input summary statistics, should contain at least the following columns: SNPrs,CHR,BP,REF,ALT,beta,pval other header names are accepted. SUMSTATS are assumed to be QCed already, specially for imputation. This script includes ambiguous strand and indel removal. Accepted synonims are: pval -> p pvalue pvalues	, snp -> snpid SNPrs rsnumber rs snprs rsid ,	alt -> effect_allele a1  minor_allele effect_allele ea	, reference-> reference_allele ref a2 oa , chr-> CHR chrom chromosome	,	pos-> position bp	,	beta->beta effsize logor log(or) or. This is all capslock insensitive thus BP==bp")
 parser.add_argument('input1',help="Input file gwa sumstats 1")
+parser.add_argument('-highlight',help="Clumped file with the loci to highlight, should be standard plink clumping output  < 5e-8 will be filtered out; with same index (SNP column) as the original Manhattan plot",default=None)
 parser.add_argument('-title1','--T1',help="title for plot of gwa sumstats",default="")
 parser.add_argument('-color1','--C1',help="Color1 ",default='#999795')
 parser.add_argument('-color2','--C2',help="Color2 ",default='#a92e4a')
@@ -170,6 +171,11 @@ if not args.circular:
 	#colors1=['#424242' if i%2 else '#a8a7a5' for i in GWAsumstats1.CHR.values] #SCZ colors
 	colors1=[args.C1 if i%2 else args.C2 for i in GWAsumstats1.CHR.values] #BIP colors
 	topAx.scatter(dftmp.loc[GWAsumstats1.SNPrs,'BP'],-np.log10(GWAsumstats1.pval),c=colors1,s=30,rasterized=True)
+	if args.highlight != None:
+		GWASclumped=pd.read_csv(clumpedFile,sep='\s+',index_col='SNP',compression='infer')
+		listSigSNPs=[dicVartoRs.get(re.sub("\(\d\)","",j),None) for i in GWASclumped.SP2[GWASclumped.P<=5e-8] for j in re.split(",",i)]
+		topAx.scatter(dftmp.loc[listSigSNPs,'BP'],-np.log10(GWAsumstats1.loc[listSigSNPs,'pval']),c='salmon',s=31,rasterized=True)
+		topAx.scatter(dftmp.loc[GWASclumped.index[GWASclumped.P<=5e-8],'BP'],-np.log10(GWAsumstats1.loc[GWASclumped.index[GWASclumped.P<=5e-8],'pval']),marker='d',c='green',s=40,rasterized=True)
 	sns.despine(ax=topAx)# removes top and right lines
 	chrs=set(dftmp.CHR) #To make xticks
 	medians=[] #postions
@@ -188,6 +194,8 @@ if not args.circular:
 	fig.tight_layout()
 	fig.savefig(args.output+'.svg')
 else:
+	if args.highlight != None:
+		print("circular highlighting is not yet implemented skipping...")
 	plt.rcParams['xtick.bottom'] = plt.rcParams['xtick.labelbottom'] = False
 	plt.rcParams['xtick.top'] = plt.rcParams['xtick.labeltop'] = True
 	fig = plt.figure()
