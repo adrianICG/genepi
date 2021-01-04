@@ -161,7 +161,6 @@ for chr in chrs:
 
 dftmp.set_index(dftmp.SNPrs,inplace=True)
 
-
 ##Plot
 if not args.circular:
 	fig = plt.figure() 
@@ -170,12 +169,15 @@ if not args.circular:
 	#Manhattan 1
 	#colors1=['#424242' if i%2 else '#a8a7a5' for i in GWAsumstats1.CHR.values] #SCZ colors
 	colors1=[args.C1 if i%2 else args.C2 for i in GWAsumstats1.CHR.values] #BIP colors
-	topAx.scatter(dftmp.loc[GWAsumstats1.SNPrs,'BP'],-np.log10(GWAsumstats1.pval),c=colors1,s=30,rasterized=True)
 	if args.highlight != None:
 		GWASclumped=pd.read_csv(clumpedFile,sep='\s+',index_col='SNP',compression='infer')
 		listSigSNPs=[dicVartoRs.get(re.sub("\(\d\)","",j),None) for i in GWASclumped.SP2[GWASclumped.P<=5e-8] for j in re.split(",",i)]
+		listNoNSigSNPs=GWAsumstats1.index[~GWAsumstats1.index.isin(listSigSNPs)]
+		topAx.scatter(dftmp.loc[listNoNSigSNPs,'BP'],-np.log10(GWAsumstats1.loc[listNoNSigSNPs,'pval']),c=colors1,s=30,rasterized=True)
 		topAx.scatter(dftmp.loc[listSigSNPs,'BP'],-np.log10(GWAsumstats1.loc[listSigSNPs,'pval']),c='salmon',s=31,rasterized=True)
 		topAx.scatter(dftmp.loc[GWASclumped.index[GWASclumped.P<=5e-8],'BP'],-np.log10(GWAsumstats1.loc[GWASclumped.index[GWASclumped.P<=5e-8],'pval']),marker='d',c='green',s=40,rasterized=True)
+	else:
+		topAx.scatter(dftmp.loc[GWAsumstats1.SNPrs,'BP'],-np.log10(GWAsumstats1.pval),c=colors1,s=30,rasterized=True)
 	sns.despine(ax=topAx)# removes top and right lines
 	chrs=set(dftmp.CHR) #To make xticks
 	medians=[] #postions
