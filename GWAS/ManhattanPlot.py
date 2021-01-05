@@ -175,7 +175,7 @@ if not args.circular:
 		listNoNSigSNPs=dftmp.index[~dftmp.index.isin(listSigSNPs)]
 		colors1=[args.C1 if i%2 else args.C2 for i in dftmp.CHR[listNoNSigSNPs]] #BIP colors
 		topAx.scatter(dftmp.loc[listNoNSigSNPs,'BP'],-np.log10(dftmp.loc[listNoNSigSNPs,'pval']),c=colors1,s=30,rasterized=True)
-		topAx.scatter(dftmp.loc[listSigSNPs,'BP'],-np.log10(dftmp.loc[listSigSNPs,'pval']),c='#b50404',s=30,rasterized=True)
+		topAx.scatter(dftmp.loc[listSigSNPs,'BP'],-np.log10(dftmp.loc[listSigSNPs,'pval']),c='#690b02',s=30,rasterized=True)
 		topAx.scatter(dftmp.loc[GWASclumped.index[GWASclumped.P<=5e-8],'BP'],-np.log10(dftmp.loc[GWASclumped.index[GWASclumped.P<=5e-8],'pval']),marker='d',c='green',s=50,rasterized=True)
 	else:
 		colors1=[args.C1 if i%2 else args.C2 for i in dftmp.CHR.values] #BIP colors
