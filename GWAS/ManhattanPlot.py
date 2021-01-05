@@ -160,6 +160,7 @@ for chr in chrs:
 	maxBP=max(dftmp.loc[dftmp.CHR==chr,'BP'])
 
 dftmp.set_index(dftmp.SNPrs,inplace=True)
+GWAsumstats1.set_index(GWAsumstats1.SNPrs,inplace=True)
 
 ##Plot
 if not args.circular:
@@ -173,7 +174,7 @@ if not args.circular:
 		clumpedFile=args.highlight
 		GWASclumped=pd.read_csv(clumpedFile,sep='\s+',index_col='SNP',compression='infer')
 		listSigSNPs=[re.sub("\(\d\)","",j) for i in GWASclumped.SP2[GWASclumped.P<=5e-8] for j in re.split(",",i)]
-		listNoNSigSNPs=GWAsumstats1.index[~GWAsumstats1.index.isin(listSigSNPs)]
+		listNoNSigSNPs=dftmp.index[~dftmp.index.isin(listSigSNPs)]
 		topAx.scatter(dftmp.loc[listNoNSigSNPs,'BP'],-np.log10(GWAsumstats1.loc[listNoNSigSNPs,'pval']),c=colors1,s=30,rasterized=True)
 		topAx.scatter(dftmp.loc[listSigSNPs,'BP'],-np.log10(GWAsumstats1.loc[listSigSNPs,'pval']),c='#b50404',s=30,rasterized=True)
 		topAx.scatter(dftmp.loc[GWASclumped.index[GWASclumped.P<=5e-8],'BP'],-np.log10(GWAsumstats1.loc[GWASclumped.index[GWASclumped.P<=5e-8],'pval']),marker='d',c='green',s=50,rasterized=True)
