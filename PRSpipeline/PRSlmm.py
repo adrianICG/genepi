@@ -324,10 +324,10 @@ for phenotype in phenos:
         with open(currname+'.PBS','w') as currscript:
             currscript.write(shebang+'\n') #write header
             currscript.write("#PBS -N lmm%s\n#PBS -r n\n#PBS -l ncpus=4,mem=%sGB,walltime=10:00:00\nmodule load GCTA/1.91.7beta\ncd $PBS_O_WORKDIR\n"%(currname,mem)) #write pbs options
-			if MultipleGRMs is None:
-				currscript.write("gcta64 --reml --grm-%s %s --pheno %s --qcovar %s --covar %s --threads 4 --out lmm_calc_out/%s --reml-est-fix"%(grmext,grmfile,currphenofile,currqcovar,covarfile,currname))
-			else:
-				currscript.write("gcta64 --reml --mgrm %s --pheno %s --qcovar %s --covar %s --threads 4 --out lmm_calc_out/%s --reml-est-fix"%(args.MultipleGRMs,currphenofile,currqcovar,covarfile,currname))
+            if MultipleGRMs is None:
+                currscript.write("gcta64 --reml --grm-%s %s --pheno %s --qcovar %s --covar %s --threads 4 --out lmm_calc_out/%s --reml-est-fix"%(grmext,grmfile,currphenofile,currqcovar,covarfile,currname))
+            else:
+                currscript.write("gcta64 --reml --mgrm %s --pheno %s --qcovar %s --covar %s --threads 4 --out lmm_calc_out/%s --reml-est-fix"%(args.MultipleGRMs,currphenofile,currqcovar,covarfile,currname))
 
 
 ###################### submit all jobs #######################
