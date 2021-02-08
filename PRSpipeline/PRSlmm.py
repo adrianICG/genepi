@@ -28,6 +28,7 @@ parser.add_argument('jobname',help="Job Name")
 parser.add_argument('-r9','--UseRelease9',help="Use release9 grm (default is release10)",action = 'store_true')
 parser.add_argument('-std','--Standardize',help="Scale the phenotypes to mean=0 std =1",action = 'store_true')
 parser.add_argument('-grm','--UseThisGRM',help="Use a specific GRM (useful for diagplus in R9) must be full path!")
+parser.add_argument('-mgrm','--MultipleGRMs',help="Use multile GRMs must be a tx file with full paths! one per row. Overrides grm and grmext",default=None)
 parser.add_argument('-grmext','--GRMextension',help="Sepcify the GRM extension, by default gz",default='gz')
 parser.add_argument('-noimput','--DoNotAddImput',help="Do not include imputation covariates automatically (use if they are already in your phenofile)",action = 'store_true')
 parser.add_argument('-noPC','--DoNotAddPC',help="Do not include PC covariates automatically (use if they are already in your phenofile)",action = 'store_true')
@@ -323,7 +324,11 @@ for phenotype in phenos:
         with open(currname+'.PBS','w') as currscript:
             currscript.write(shebang+'\n') #write header
             currscript.write("#PBS -N lmm%s\n#PBS -r n\n#PBS -l ncpus=4,mem=%sGB,walltime=10:00:00\nmodule load GCTA/1.91.7beta\ncd $PBS_O_WORKDIR\n"%(currname,mem)) #write pbs options
-            currscript.write("gcta64 --reml --grm-%s %s --pheno %s --qcovar %s --covar %s --threads 4 --out lmm_calc_out/%s --reml-est-fix"%(grmext,grmfile,currphenofile,currqcovar,covarfile,currname))
+			if MultipleGRMs is None:
+				currscript.write("gcta64 --reml --grm-%s %s --pheno %s --qcovar %s --covar %s --threads 4 --out lmm_calc_out/%s --reml-est-fix"%(grmext,grmfile,currphenofile,currqcovar,covarfile,currname))
+			else:
+				currscript.write("gcta64 --reml --mgrm %s --pheno %s --qcovar %s --covar %s --threads 4 --out lmm_calc_out/%s --reml-est-fix"%(args.MultipleGRMs,currphenofile,currqcovar,covarfile,currname))
+
 
 ###################### submit all jobs #######################
 print("Submitting jobs to the cluster GCTA PBS scripts")
