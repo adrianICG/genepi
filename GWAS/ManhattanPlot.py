@@ -187,11 +187,10 @@ if not args.circular:
 	for chr in chrs:
 		medians.append(np.median(dftmp.loc[dftmp.CHR==chr,'BP']))
 		labels.append(str(int(chr)))
-	#Manhattan 2
 	topAx.set_xticks(medians) #add xticklabels
 	topAx.set_xticklabels(labels,fontsize=20)
 	ylabels=topAx.get_yticklabels()
-	topAx.set_yticklabels(ylabels,fontsize=20)
+	topAx.set_yticklabels(ylabels,fontsize=18)
 	topAx.set_ylabel('-log10(pvalue)',fontsize=30)
 	topAx.set_xlabel('Chromosome',fontsize=25)
 	topAx.set_title(args.T1,fontsize=15)
