@@ -16,7 +16,7 @@ try:
 except ImportError:
     print('Python module does not seem to be loaded')
     exit()
-	
+
     
 parser = argparse.ArgumentParser(description="Input comprises four files: Sumstats and Annot files as per 23andMe standards")
 parser.add_argument('-sumstats',help="Path to the 23andMe sumstats")
