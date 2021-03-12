@@ -73,6 +73,8 @@ sumstats['BETA']=sumstats['effect']
 sumstats['SE']=sumstats['stderr']
 sumstats['P']=sumstats['pvalue']
 sumstats['FREQ']=imFile.loc[[i for i in sumstats.index if i in imFile.index],'freq.b']
+sumstats['N']=sumstats['Ncases']+sumstats['Nctrls']
+
 sumstats.FREQ.fillna(gtFile['freq.b'],inplace=True)
 
 
