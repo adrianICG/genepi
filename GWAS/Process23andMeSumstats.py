@@ -81,7 +81,7 @@ sumstats.FREQ.fillna(gtFile['freq.b'],inplace=True)
 
 
 
-sumstats=sumstats.loc[:,['CHR','BP','A1','A2','FREQ','BETA','SE','P','Ncases','Nctrls']]
+sumstats=sumstats.loc[:,['CHR','BP','A1','A2','FREQ','BETA','SE','P','Ncases','Nctrls','N']]
 
 
 
