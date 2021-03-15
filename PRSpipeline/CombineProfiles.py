@@ -28,7 +28,7 @@ args = parser.parse_args()
 
 if args.ext is None:
     print("A common extension for the files to be merged is required")
-    sys.exit()
+    sys.exit(1)
 
 scoreFiles=glob.glob('*%s'%(args.ext))
 
@@ -40,11 +40,13 @@ firstFile=scoreFiles.pop()
 if args.style=='PRSice':
     cols2use=None
 elif args.style=='plink':
-    cols2use=['IID','ALLELE_CT','SCORE1_SUM']
+    cols2use=['IID','ALLELE_CT','SCORE1_SUM','SCORE2_SUM']
 elif args.style=='plink2':
-    cols2use=['IID','ALLELE_CT','SCORE1_SUM']
+    cols2use=['IID','ALLELE_CT','SCORE1_SUM','SCORE2_SUM']
 
-PRSDF=pd.read_csv(firstFile,header=0,sep='\s+',compression='infer',usecols=cols2use)
+PRSDF=pd.read_csv(firstFile,header=0,sep='\s+',compression='infer')
+cols2use=['IID','ALLELE_CT']+[i for i in PRSDF.columns if re.match('SCORE\d+_SUM')]
+PRSDF=PRSDF.loc[:,cols2use]
 PRSDF.index=PRSDF.IID
 PRSDF.drop('IID',axis=1,inplace=True)
 try:
@@ -52,7 +54,12 @@ try:
 except KeyError:
     pass
 for f in scoreFiles:
-    tmpDF=pd.read_csv(f,header=0,sep='\s+',compression='infer',usecols=cols2use)
+    tmpDF=pd.read_csv(f,header=0,sep='\s+',compression='infer')
+    try:
+        tmpDF=tmpDF.loc[:,cols2use]
+    except KeyError:
+        print('Score files have inconsistent columns')
+        sys.exit(1)
     tmpDF.index=tmpDF.IID
     tmpDF.drop('IID',axis=1,inplace=True)
     try:
