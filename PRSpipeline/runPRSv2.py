@@ -855,11 +855,11 @@ if RunSBayesR:
 		currscript=open(scriptname, 'w')
 		currscript.write("%s\n"%(JobScriptHeader))
 		currscript.write("#PBS -N SbayesR\n")
-		currscript.write("#PBS -l mem=32GB,walltime=10:00:00\n")
+		currscript.write("#PBS -l mem=260GB,walltime=10:00:00\n")
 		currscript.write("cd $PBS_O_WORKDIR\n")
 		currscript.write("chr=$PBS_ARRAY_INDEX\n")
-		currscript.write("module load gctb/2.0\n")
-		currscript.write("gctb --sbayes R \\\n--ldm /reference/genepi/public_reference_panels/ldm_ukb_50k_bigset_2.8M/ukb50k_shrunk_chr${chr}_mafpt01.ldm.sparse \\\n--pi 0.95,0.02,0.02,0.01 \\\n--gamma 0.0,0.01,0.1,1 \\\n--gwas-summary %s \\\n--chain-length 25000 \\\n--burn-in 5000 \\\n--out-freq 10 \\\n--out SBayesR/%s_chr${chr}_SBayesR.output %s %s %s\n"%(SBRsumstatsName,PRSname,SBRexcludeMHCline,SBRhsqline,SBRseedline))
+		currscript.write("module load gctb/2.03beta\n")
+		currscript.write("gctb --sbayes R \\\n--mldm /reference/genepi/public_reference_panels/ldm_ukb_50k_bigset_2.8M/ukb50k_2.8M_shrunk_sparse.mldmlist \\\n--pi 0.95,0.02,0.02,0.01 \\\n--gamma 0.0,0.01,0.1,1 \\\n--gwas-summary %s \\\n--chain-length 25000 \\\n--burn-in 5000 \\\n--out-freq 10 \\\n--out SBayesR/%s_SBayesR.output %s %s %s\n"%(SBRsumstatsName,PRSname,SBRexcludeMHCline,SBRhsqline,SBRseedline))
 	except IOError:
 		eprint("Error : could not write file %s !\n"%(scriptname))
 		AnyErrors=True
@@ -872,7 +872,7 @@ if RunSBayesR:
 	finishedJobs={} #hash to keep track of submission and check if done
 	eprint("At %s : Submitting one array job.\n"%(datetime.datetime.now()))
 	subjobname="SbayesR"
-	Submit=subprocess.Popen('%s -J 1-22 -N "%s" -o SBayesR/logfiles/ -e SBayesR/logfiles/ %s'%(qsubbinary,subjobname,scriptname),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	Submit=subprocess.Popen('%s -N "%s" -o SBayesR/logfiles/ -e SBayesR/logfiles/ %s'%(qsubbinary,subjobname,scriptname),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	#Maybe all the following lines (until 860) should be wrapped in a submission function or object??
 	outraw=Submit.communicate()
 	outlines=outraw[0].decode("utf-8") + outraw[1].decode("utf-8")
