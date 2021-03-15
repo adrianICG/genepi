@@ -45,7 +45,7 @@ elif args.style=='plink2':
     cols2use=['IID','ALLELE_CT','SCORE1_SUM','SCORE2_SUM']
 
 PRSDF=pd.read_csv(firstFile,header=0,sep='\s+',compression='infer')
-cols2use=['IID','ALLELE_CT']+[i for i in PRSDF.columns if re.match('SCORE\d+_SUM')]
+cols2use=['IID','ALLELE_CT']+[i for i in PRSDF.columns if re.match('SCORE\d+_SUM',i)]
 PRSDF=PRSDF.loc[:,cols2use]
 PRSDF.index=PRSDF.IID
 PRSDF.drop('IID',axis=1,inplace=True)
