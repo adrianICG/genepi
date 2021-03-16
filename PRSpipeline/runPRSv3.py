@@ -277,7 +277,7 @@ parser.add_argument('-runSBayesR', type=str2bool, default='True', action='store'
 parser.add_argument('-runPRS', type=str2bool, default='True', action='store', help="Run PRS calculation step ? ('True' or 'False'; only set to 'False' if nothing has changed in the input)")
 parser.add_argument('-compileblocks', type=str2bool, default='True', action='store', help="Compile PRS results across the whole genome ? ('True' or 'False'; generally only set to 'False' for testing)")
 parser.add_argument('-mergeCTandSB', type=str2bool, default='False', action='store', help="Compile SbayesR and Clumping+ Thresholding results in a final single file")
-parser.add_argument('-runUnweightedPRS', type=str2bool, default='True', action='store', help="Run unweighted PRS ? ('True' or 'False'; default False. If true unweighted clumping + thresholding PRS is to be performed. This is additional to normal clumping + thresholding thus the flag is incompatible if clumping is False")
+parser.add_argument('-runUnweightedPRS', type=str2bool, default='False', action='store', help="Run unweighted PRS ? ('True' or 'False'; default False. If true unweighted clumping + thresholding PRS is to be performed. This is additional to normal clumping + thresholding thus the flag is incompatible if clumping is False")
 
 #.. SBayes R optional changes
 parser.add_argument('-SBRexcludeMHC',type=str2bool,default='True', action='store',help="Exclude the MHC region from SBayes R, set to false to comapre with methods not excluding MHC region")
