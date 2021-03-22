@@ -6,11 +6,9 @@
 # 11 Sept 2019 onward : also partially the work of Scott Gordon ("SG")
 #
 #
-# To do list:
-# 1. Discuss with Lucia/Sarah why including indels could be problematic, update code accordignly
-# 2. Add --exclude-mhc option for SBayesR default True
-# 3. Add --hsq prior for SbayesR default None
-# 4. Add --seed optional flag for SbayesR default None
+# Update 22 March 2021 [AC]
+# Updated to support Release11. Testing is required 
+#
 #
 #
 # Update 15 March 2021 [AC]
@@ -73,7 +71,7 @@ class z():
 		self.SBRexcludeMHC=True
 		self.SBRhsq=None
 		self.SBRseed=None
-		self.runUnweightedPRS=True
+		self.runUnweightedPRS=False
 args=z()
 '''		
 
@@ -385,7 +383,7 @@ qsubbinary="/opt/pbs/bin/qsub"
 qstatbinary="/opt/pbs/bin/qstat"
 DatasetParts=args.dataset.split("_")
 
-for i in range(len(DatasetParts)):
+for sub in DatasetParts:
 	sub = DatasetParts[i]
 	lsub = sub.lower()
 	Valid=False
@@ -398,6 +396,10 @@ for i in range(len(DatasetParts)):
 		ReleaseNamecnt += 1
 		Valid=True
 		ReleaseName='Release9'
+	elif (lsub == "release11") or (sub == "r11"):
+		ReleaseNamecnt += 1
+		Valid=True
+		ReleaseName='Release11'
 	# Reference panel name
 	elif (lsub == "hrcr1.1") or (sub == "hrc"):
 		ReferencePanelNamecnt += 1
@@ -928,7 +930,7 @@ if RunSBayesR:
 		currscript=open(scriptname, 'w')
 		currscript.write("%s\n"%(JobScriptHeader))
 		currscript.write("#PBS -N SbayesR\n")
-		currscript.write("#PBS -l mem=260GB,walltime=10:00:00\n")
+		currscript.write("#PBS -l mem=260GB,walltime=24:00:00\n")
 		currscript.write("cd $PBS_O_WORKDIR\n")
 		currscript.write("chr=$PBS_ARRAY_INDEX\n")
 		currscript.write("module load gctb/2.03beta\n")
@@ -1602,20 +1604,16 @@ else:
 				currscript.write("cd %s\n"%(normalwd))
 				currscript.write("%s/Scripts/CompileProfileFiles.sh -fastmode PRS_calc/PRS_out/PRS_chr{%s}.%s.profile > %s\n"%(ReleaseLocation,','.join(blocknames),cutoff,OutName))
 				if Unweighted:
-					currscript.write("%s/Scripts/CompileProfileFiles.sh -fastmode PRS_calc/PRS_out/PRS_chr{%s}.%s_uw.profile > %s.unweighted\n"%(ReleaseLocation,','.join(blocknames),cutoff,OutName))
+					currscript.write("%s/Scripts/CompileProfileFiles.sh -fastmode PRS_calc/PRS_out/PRS_chr{%s}_uw.%s.profile > %s.unweighted\n"%(ReleaseLocation,','.join(blocknames),cutoff,OutName))
 				currscript.close()
 			except IOError:
 				eprint("Error : could not write file %s !\n"%(scriptname))
 				AnyErrors=True
 			finally:
 				os.chmod(scriptname,0o755)
-	#           if True : #(cutoff == "S1") or (cutoff == "S2") or (cutoff == "S3") or (cutoff == "S4") or (cutoff == "S5") or (cutoff == "S6") or (cutoff == "S7") or (cutoff == "S8") :
 				subjobname="compile%s"%(cutoff)
 				if JobNamePrefix != "":
 					subjobname="%s_%s"%(JobNamePrefix,subjobname)
-	#           Submit=subprocess.Popen('%s -l select=1:ncpus=1:mem=2GB -l walltime=1:0:0 -r y -N "%s" -koed -o %s.log -e %s.log1 %s'%(qsubbinary,subjobname,prefix,prefix,scriptname),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	#           Submit=subprocess.Popen('%s -l select=1:ncpus=1:mem=2GB -l walltime=1:0:0 -r y -N "%s" -j oe -o %s.log_job %s'%(qsubbinary,subjobname,prefix,scriptname),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	#           eprint("qsubbinary='%s'; subjobname='%s'; prefix='%s'; scriptname='%s'"%(qsubbinary,subjobname,prefix,scriptname))
 				Submit=subprocess.Popen('%s -l select=1:ncpus=1:mem=6GB -l walltime=1:0:0 -r y -N "%s" -j oe -o %s.log_job %s'%(qsubbinary,subjobname,prefix,scriptname),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 				outraw=Submit.communicate()
 				outlines=outraw[0].decode("utf-8") + outraw[1].decode("utf-8")
