@@ -384,7 +384,6 @@ qstatbinary="/opt/pbs/bin/qstat"
 DatasetParts=args.dataset.split("_")
 
 for sub in DatasetParts:
-	sub = DatasetParts[i]
 	lsub = sub.lower()
 	Valid=False
 	# Release name
