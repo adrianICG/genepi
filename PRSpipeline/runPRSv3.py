@@ -929,7 +929,7 @@ if RunSBayesR:
 		currscript=open(scriptname, 'w')
 		currscript.write("%s\n"%(JobScriptHeader))
 		currscript.write("#PBS -N SbayesR\n")
-		currscript.write("#PBS -l mem=260GB,walltime=24:00:00,chip=Intel\n")
+		currscript.write("#PBS -l mem=260GB,walltime=36:00:00\n")
 		currscript.write("cd $PBS_O_WORKDIR\n")
 		currscript.write("chr=$PBS_ARRAY_INDEX\n")
 		currscript.write("module load gctb/2.03beta\n")
